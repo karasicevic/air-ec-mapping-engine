@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "air-ecmap"
+version = "0.1.0"
+description = "Deterministic EC + Mapping engine bootstrap"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic",
+  "typer",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+]
+
+[project.scripts]
+air-ecmap = "air_ecmap.cli:main"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
