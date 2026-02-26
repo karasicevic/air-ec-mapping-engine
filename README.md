@@ -63,6 +63,12 @@ Outputs in one directory:
 - EC artifacts (`step1-*`, `step2-*`, `step3-*`, `step4-*`)
 - Mapping artifacts (`mapping.mra.*`, `mapping.explanations.*`)
 
+Quick start with repository fixtures:
+
+```powershell
+air-ecmap run-all --bundle .\fixtures\bundle.json --iucs .\fixtures\iucs.json --mapping-config .\fixtures\mapping_config.json --output-dir .\out\all
+```
+
 ## Notes
 
 - On failure, commands print a uniform error envelope (`error`, `reason`, `details`) and exit non-zero.
