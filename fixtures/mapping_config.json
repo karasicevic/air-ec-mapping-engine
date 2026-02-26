@@ -1,0 +1,208 @@
+{
+  "profilePairs": [
+    {
+      "sourceProfileId": "Profile.IUC_source",
+      "targetProfileId": "Profile.IUC_target"
+    }
+  ],
+  "bie_catalog": {
+    "InvoiceID_BBIE": {
+      "anchor": "InvoiceID_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "IssueDate_BBIE": {
+      "anchor": "IssueDate_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "DocumentCurrency_BBIE": {
+      "anchor": "DocumentCurrency_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "Invoice_ABIE": {
+      "anchor": "Invoice_ABIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "InvoiceLine_ABIE": {
+      "anchor": "InvoiceLine_ABIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "TaxTotal_ABIE": {
+      "anchor": "TaxTotal_ABIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    },
+    "PaymentTerms_ABIE": {
+      "anchor": "PaymentTerms_ABIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "Invoice_to_InvoiceLine_ASBIE": {
+      "anchor": "Invoice_to_InvoiceLine_ASBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "Invoice_to_TaxTotal_ASBIE": {
+      "anchor": "Invoice_to_TaxTotal_ASBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "Invoice_to_LegalMonetaryTotal_ASBIE": {
+      "anchor": "Invoice_to_LegalMonetaryTotal_ASBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "Invoice_to_PaymentTerms_ASBIE": {
+      "anchor": "Invoice_to_PaymentTerms_ASBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "InvoicedQuantity_BBIE": {
+      "anchor": "InvoicedQuantity_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "PriceAmount_BBIE": {
+      "anchor": "PriceAmount_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "LineExtensionAmount_BBIE": {
+      "anchor": "LineExtensionAmount_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "TaxCategory_BBIE": {
+      "anchor": "TaxCategory_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    },
+    "TaxableAmount_BBIE": {
+      "anchor": "TaxableAmount_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    },
+    "TaxAmount_BBIE": {
+      "anchor": "TaxAmount_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    },
+    "LineExtensionTotal_BBIE": {
+      "anchor": "LineExtensionTotal_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "TaxExclusiveTotal_BBIE": {
+      "anchor": "TaxExclusiveTotal_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    },
+    "TaxInclusiveTotal_BBIE": {
+      "anchor": "TaxInclusiveTotal_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    },
+    "PayableTotal_BBIE": {
+      "anchor": "PayableTotal_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    },
+    "PaymentDueDate_BBIE": {
+      "anchor": "PaymentDueDate_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "LegalMonetaryTotal_ABIE": {
+      "anchor": "LegalMonetaryTotal_ABIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ]
+    }
+  },
+  "schemaPaths": {
+    "source": {
+      "Invoice_ABIE": "$.invoice",
+      "InvoiceID_BBIE": "$.invoice.header.invoiceId",
+      "IssueDate_BBIE": "$.invoice.header.issueDate",
+      "DocumentCurrency_BBIE": "$.invoice.header.documentCurrency",
+      "Invoice_to_InvoiceLine_ASBIE": "$.invoice.lines",
+      "InvoiceLine_ABIE": "$.invoice.lines[i]",
+      "InvoicedQuantity_BBIE": "$.invoice.lines[i].invoicedQuantity",
+      "PriceAmount_BBIE": "$.invoice.lines[i].price.amount",
+      "LineExtensionAmount_BBIE": "$.invoice.lines[i].lineExtensionAmount",
+      "Invoice_to_TaxTotal_ASBIE": "$.invoice.taxTotals",
+      "TaxTotal_ABIE": "$.invoice.taxTotals[j]",
+      "TaxCategory_BBIE": "$.invoice.taxTotals[j].taxSubtotals[k].taxCategoryCode",
+      "TaxableAmount_BBIE": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount",
+      "TaxAmount_BBIE": "$.invoice.taxTotals[j].taxSubtotals[k].taxAmount",
+      "Invoice_to_LegalMonetaryTotal_ASBIE": "$.invoice.legalMonetaryTotal",
+      "LegalMonetaryTotal_ABIE": "$.invoice.legalMonetaryTotal",
+      "LineExtensionTotal_BBIE": "$.invoice.legalMonetaryTotal.lineExtensionTotal",
+      "TaxExclusiveTotal_BBIE": "$.invoice.legalMonetaryTotal.taxExclusiveTotal",
+      "TaxInclusiveTotal_BBIE": "$.invoice.legalMonetaryTotal.taxInclusiveTotal",
+      "PayableTotal_BBIE": "$.invoice.legalMonetaryTotal.payableTotal",
+      "Invoice_to_PaymentTerms_ASBIE": "$.invoice.paymentTerms",
+      "PaymentTerms_ABIE": "$.invoice.paymentTerms",
+      "PaymentDueDate_BBIE": "$.invoice.paymentTerms.paymentDueDate"
+    },
+    "target": {
+      "Invoice_ABIE": "/Invoice",
+      "InvoiceID_BBIE": "/Invoice/cbc:ID",
+      "IssueDate_BBIE": "/Invoice/cbc:IssueDate",
+      "DocumentCurrency_BBIE": "/Invoice/cbc:DocumentCurrencyCode",
+      "Invoice_to_InvoiceLine_ASBIE": "/Invoice/cac:InvoiceLine",
+      "InvoiceLine_ABIE": "/Invoice/cac:InvoiceLine[i+1]",
+      "InvoicedQuantity_BBIE": "/Invoice/cac:InvoiceLine[i+1]/cbc:InvoicedQuantity",
+      "PriceAmount_BBIE": "/Invoice/cac:InvoiceLine[i+1]/cac:Price/cbc:PriceAmount",
+      "LineExtensionAmount_BBIE": "/Invoice/cac:InvoiceLine[i+1]/cbc:LineExtensionAmount",
+      "Invoice_to_TaxTotal_ASBIE": "/Invoice/cac:TaxTotal",
+      "TaxTotal_ABIE": "/Invoice/cac:TaxTotal",
+      "TaxCategory_BBIE": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
+      "TaxableAmount_BBIE": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
+      "TaxAmount_BBIE": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
+      "Invoice_to_LegalMonetaryTotal_ASBIE": "/Invoice/cac:LegalMonetaryTotal",
+      "LegalMonetaryTotal_ABIE": "/Invoice/cac:LegalMonetaryTotal",
+      "LineExtensionTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:LineExtensionAmount",
+      "TaxExclusiveTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount",
+      "TaxInclusiveTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+      "PayableTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+      "Invoice_to_PaymentTerms_ASBIE": "/Invoice/cac:PaymentTerms",
+      "PaymentTerms_ABIE": "/Invoice/cac:PaymentTerms",
+      "PaymentDueDate_BBIE": "/Invoice/cac:PaymentTerms/cbc:PaymentDueDate"
+    }
+  }
+}

@@ -1,1 +1,496 @@
-PASTE THE NORMATIVE TEXT HERE; DO NOT GUESS.
+Mission-Mapping-2.1
+Mapping simulation on top of Effective Context (EC)
+(Aligned with Contextualization Simulation Doc and Mission-EC-2.1)
+
+0) Goal and outputs
+
+This mission specifies the behavior of a mapping engine that runs strictly
+AFTER the EC computation defined in Mission-EC-2.1 and uses ONLY those EC
+artifacts as its semantic input.
+
+The engine’s job is to:
+
+- Find the SHARED MAPPING SURFACE between a source and target profile:
+  the BIEs that are contextually present on both sides and whose EC is
+  compatible on the dials that matter.
+
+- Classify each candidate BIE into:
+  - SEAMLESS          (context-invariant, same semantics on relevant axes),
+  - CONTEXTUAL_TRANSFORM (same anchor, but behavior differs by context),
+  - NO_MAPPING        (no justifiable mapping in this scenario).
+
+- For every BIE that is SEAMLESS or CONTEXTUAL_TRANSFORM, produce:
+  - Mapping JSON   (paths, transform, constraints, tests),
+  - Explanation JSON (TL;DR, reasoning steps, standards references, micro-tests).
+
+
+Outputs (per profile pair S↔T):
+
+- mapping.mra.<S>.<T>.json
+    [
+      one MRA (Mapping Rule Artifact) per mapped BIE (SEAMLESS or CONTEXTUAL_TRANSFORM)
+    ]
+
+- mapping.explanations.<S>.<T>.json
+    [
+      one explanation object per MRA (Mapping Rule Artifact)
+    ]
+    mapping.explanations.<S>.<T>.json is a convenience projection of the explanationJson objects embedded in mapping.mra.<S>.<T>.json.
+
+- patternIndex.json (optional, across many pairs)
+    [
+      reusable mapping patterns keyed by context + anchor + transform
+    ]
+
+
+1) Input contract
+
+1.1 Profiles
+
+The mapping engine operates on profiles as defined in Mission-EC-2.1:
+
+- A profile P is the triple:
+  P = (P.IUC, P.EC, P.ProfileSchema)
+
+The mapping engine receives, per profile pair:
+
+- Source profile  S = (S.IUC, S.EC, S.ProfileSchema)
+- Target profile  T = (T.IUC, T.EC, T.ProfileSchema)
+
+These are read from step3 / step4 artifacts produced by Mission-EC-2.1:
+
+- step3-ec.<profileId>.json
+- step4-profile.<profileId>.json
+
+-- IUC object for that profileId.
+
+
+1.2 EC and ProfileSchema artifacts are read-only
+
+The mapping engine MUST treat the Mission-EC artifacts as read-only:
+
+- EC_P(X): sets of tuples per component X (from step3-ec.<profileId>.json).
+- ProfileSchema_P: the tree of components with EC≠∅ (from step4-profile.<profileId>.json). :contentReference[oaicite:2]{index=2}
+
+The mapping engine MUST NOT:
+
+- change any EC tuple,
+- add new tuples,
+- change profile schemas.
+
+
+1.3 Tuple semantics
+
+All tuple operations MUST be exactly those defined in Mission-EC-2.1:
+
+- same definition of CATEGORY and PLACEHOLDER tokens,
+- same equality and dedup semantics,
+- same T_union and T_intersect semantics,
+- same determinism guarantees. :contentReference[oaicite:3]{index=3}
+
+The mapping mission MUST NOT introduce alternative tuple semantics.
+
+2) Profile pairs to process
+
+The mapping engine does not discover pairs by itself. It receives a list:
+
+- profilePairs: array of objects:
+  {
+    "sourceProfileId": string,
+    "targetProfileId": string
+  }
+
+For each pair (sourceProfileId, targetProfileId):
+
+- locate S and T profiles in the EC artifacts,
+- process pairs in the given order,
+- emit MRAs and explanations in the same order. :contentReference[oaicite:4]{index=4}
+
+
+3) BIE catalog and mapping configuration
+
+3.1 BIE catalog (bie_catalog.json) 
+
+The BIE catalog  defines which BIEs are in scope for mapping and which axes
+are relevant for classification.
+
+- bie_catalog: JSON object keyed by BIE / component identifier:
+
+  bie_catalog[componentId] = {
+    "anchor": string,           // e.g. "LineExtensionAmount_BBIE"
+    "relevantAxes": string[],   // dials that matter for semantics
+    "notes": string (optional)  // human hints
+  }
+
+Example (simplified):
+
+{
+  "InvoiceID_BBIE": {
+    "anchor": "InvoiceID_BBIE",
+    "relevantAxes": ["BP"]
+  },
+  "LineExtensionAmount_BBIE": {
+    "anchor": "LineExtensionAmount_BBIE",
+    "relevantAxes": ["BP"]
+  },
+  "TaxCategory_BBIE": {
+    "anchor": "TaxCategory_BBIE",
+    "relevantAxes": ["BP","TAX","GE"]
+  },
+  "PaymentTerms_ABIE": {
+    "anchor": "PaymentTerms_ABIE",
+    "relevantAxes": ["CT","GE"]
+  }
+}
+
+Interpretation:
+
+- relevantAxes is exactly what the Contextualization doc calls “axes that matter”
+  when deciding whether a mapping is seamless or contextual. :contentReference[oaicite:5]{index=5}
+
+
+3.2 Key Context Dimensions (KCD)
+
+For convenience, define:
+
+- KCD(X) = bie_catalog[X].relevantAxes
+
+If KCD(X) is absent, the engine MUST treat it as an empty list []:
+“mapping is context-invariant w.r.t. EC dials”.
+
+All later uses of KCD(X) refer to this definition.
+
+3.3 Schema path config (schemaPaths)
+
+Schema paths are domain-specific and provided via configuration:
+
+- schemaPaths[side][componentId] = path string
+
+where side ∈ {"source", "target"}.
+
+Example (illustrative):
+
+{
+  "source": {
+    "InvoiceID_BBIE": "$.invoiceHeader.invoiceId",
+    "LineExtensionAmount_BBIE": "$.lines[i].lineNet"
+  },
+  "target": {
+    "InvoiceID_BBIE": "/Invoice/cbc:ID",
+    "LineExtensionAmount_BBIE": "/Invoice/cac:InvoiceLine[i+1]/cbc:LineExtensionAmount"
+  }
+}
+
+Mission-Mapping-2.1 is domain-agnostic (Peppol, OAGIS, UBL, etc.); behavior
+is driven entirely by bie_catalog and schemaPaths. :contentReference[oaicite:6]{index=6}
+
+
+4) High-level execution overview
+
+For each profile pair (S, T) in profilePairs, the engine SHALL execute:
+
+M0. Load EC artifacts and profile schemas for S and T.
+
+M1. Compute the SHARED MAPPING SURFACE:
+    - presence overlap (EC≠∅ on both sides),
+    - intersection of ECs on relevant axes (KCD).
+
+M2. For each candidate BIE X in presentOverlap, classify:
+
+    decision(X) ∈ { SEAMLESS, CONTEXTUAL_TRANSFORM, NO_MAPPING }
+
+M3. For each BIE with decision ≠ NO_MAPPING, generate:
+
+    - Mapping JSON object,
+    - Explanation JSON object.
+
+M4. Optionally, publish patterns into Pattern Index and compute per-pair KPIs.
+
+All steps MUST be deterministic given the inputs (EC + configuration).
+
+
+5) Shared Mapping Surface
+
+The Shared Mapping Surface is the “candidate mapping scope” from the doc:
+only BIEs that are contextually present on both sides and have non-empty EC projections on the relevant axes. Whether those projections actually intersect on those axes determines SEAMLESS vs CONTEXTUAL_TRANSFORM (see §6).
+
+5.1 Presence overlap (EC≠∅ on both sides)
+
+For a profile P and component X:
+
+- X is “present in P” if EC_P(X) ≠ ∅. 
+
+Define:
+
+- S_present = { X | EC_S(X) ≠ ∅ }
+- T_present = { X | EC_T(X) ≠ ∅ }
+
+Presence overlap (component-level):
+
+- presentOverlap = S_present ∩ T_present   // BIEs with EC≠∅ on both sides :contentReference[oaicite:8]{index=8}
+
+Components outside presentOverlap MAY be reported as “source-only” or 
+“target-only” but receive decision(X) = NO_MAPPING by default.
+
+
+5.2 Tuple-level intersection on KCD
+
+For each X ∈ presentOverlap:
+
+- Let A = KCD(X) = relevantAxes(X) from the BIE catalog.
+- Let ECs_full(X) = EC_S(X)
+- Let ECt_full(X) = EC_T(X)
+
+Project on the relevant axes:
+
+- ECs_rel(X) = project(ECs_full(X), A)
+- ECt_rel(X) = project(ECt_full(X), A)
+
+where project() keeps only dial/value pairs whose dial ∈ A (drop others).
+
+Then compute:
+
+- EC_common(X) = T_intersect(ECs_rel(X), ECt_rel(X))
+
+The Shared Mapping Surface is the set of pairs (X, EC_common(X)) such that:
+
+- X ∈ presentOverlap, and
+- ECs_rel(X) ≠ ∅, ECt_rel(X) ≠ ∅.
+
+Note: EC_common(X) may be empty. Such an X is still part of the Shared Mapping Surface as long as both EC projections on the relevant axes are non-empty. In §6, EC_common(X) ≠ ∅ leads to SEAMLESS, while EC_common(X) = ∅ but ECs_rel(X) and ECt_rel(X) are both non-empty leads to CONTEXTUAL_TRANSFORM.
+
+6) Per-BIE classification (SEAMLESS / CONTEXTUAL_TRANSFORM / NO_MAPPING)
+
+For each X ∈ presentOverlap:
+
+Step C1: Degenerate cases
+
+- If ECs_rel(X) = ∅ OR ECt_rel(X) = ∅:
+    → decision(X) = NO_MAPPING
+      (EC is absent on at least one side along relevant axes.)
+
+Step C2: Intersection on relevant axes
+
+- If EC_common(X) ≠ ∅:
+    → decision(X) = SEAMLESS
+
+    Interpretation:
+    - On the axes that matter for semantics (KCD(X)), source and target share
+      at least one context tuple; mapping does not need context-branching.
+
+- Else (EC_common(X) = ∅ but ECs_rel(X), ECt_rel(X) both non-empty):
+    → decision(X) = CONTEXTUAL_TRANSFORM
+
+    Interpretation:
+    - The anchor is the same (same BIE), but the behavior differs depending on
+      context (e.g., TAX/GE differ); mapping must encode context-sensitive logic.
+
+Step C3: Optional technical subtype
+
+The engine MAY additionally tag a SEAMLESS mapping as:
+
+- subtype(X) = IDENTITY    (simple copy, minor format tweaks),
+- subtype(X) = DERIVED     (computed from other values, e.g., qty×price).
+
+This subtype is a technical convenience for Mapping JSON; it does not replace
+decision(X).
+
+7) MRA — Mapping Rule Artifact
+
+7.1 MRA structure (conceptual)
+
+For each X with decision(X) ∈ {SEAMLESS, CONTEXTUAL_TRANSFORM}, the engine
+MUST create an MRA (Mapping Rule Artifact):
+
+MRA_X = {
+  "componentId": string,
+  "decision": "SEAMLESS" | "CONTEXTUAL_TRANSFORM",
+  "subtype": "IDENTITY" | "DERIVED" | "CONTEXTUAL" | null,
+  "relevantAxes": string[],
+  "EC_source": [ tuple, ... ],        // full EC_S(X)
+  "EC_target": [ tuple, ... ],        // full EC_T(X)
+  "EC_common_on_KCD": [ tuple, ... ], // EC_common(X)
+  "mappingJson": { ... },             // see §7.2
+  "explanationJson": { ... }          // see §7.3
+}
+
+Constraints:
+
+- componentId MUST match the key in bie_catalog and the component in EC artifacts.
+- relevantAxes MUST equal KCD(X).
+- EC_source/EC_target MUST be full EC (not projected).
+- EC_common_on_KCD MUST be the intersection on relevant axes.
+
+
+7.2 Mapping JSON (machine-executable mapping)
+
+The Mapping JSON follows the structure sketched in the Contextualization doc:
+
+mappingJson = {
+  "id": string,
+  "componentId": string,
+  "decision": "SEAMLESS" | "CONTEXTUAL_TRANSFORM",
+  "subtype": "IDENTITY" | "DERIVED" | "CONTEXTUAL" | null,
+  "source_path": string,
+  "target_path": string,
+  "transform": {
+    "type": "identity" | "derived" | "contextual",
+    "expr": string,          // expression or rule reference
+    "params": object         // optional
+  },
+  "constraints": {
+    // domain rules (code lists, rounding, etc.)
+  },
+  "tests": [
+    {
+      "type": "formula" | "context" | "structural",
+      "input": any,
+      "expect": any,
+      "description": string
+    }
+  ],
+  "provenance": {
+    "references": [
+      {
+        "standard": string,
+        "path": string (optional),
+        "note": string (optional)
+      }
+    ]
+  }
+}
+
+Examples:
+
+- For a SEAMLESS, DERIVED mapping (line net = qty×price),
+  transform.type = "derived", decision = "SEAMLESS". :contentReference[oaicite:10]{index=10}
+
+- For a CONTEXTUAL_TRANSFORM mapping (TaxCategory S20 ↔ AE0),
+  transform.type = "contextual" and decision = "CONTEXTUAL_TRANSFORM". :contentReference[oaicite:11]{index=11}
+
+
+7.3 Explanation JSON (explainability)
+
+Each mapping MUST have Explanation JSON with a TL;DR, reasoning, references,
+and micro-tests, as described in the doc. :contentReference[oaicite:12]{index=12} :contentReference[oaicite:13]{index=13}
+
+explanationJson = {
+  "mapping": string,               // id of mappingJson
+  "summary_tldr": string,          // short managerial sentence
+  "reasoning_steps": [ string ],   // 3–7 bullet steps
+  "references": [
+    {
+      "standard": string,
+      "path": string (optional),
+      "note": string (optional)
+    }
+  ],
+  "validation": [
+    {
+      "type": "formula" | "context" | "structural",
+      "expr": string (optional),
+      "input": any (optional),
+      "expect": any (optional),
+      "result": any (optional),
+      "status": "pass" | "fail"
+    }
+  ]
+}
+
+The mapping engine MAY leave some validation["result"] fields unfilled if it
+cannot execute tests; a test runner can fill them later.
+
+
+8) Pattern Index and reuse (REX)
+
+To support reuse, mapping patterns MAY be promoted into a Pattern Index as
+suggested in the doc. :contentReference[oaicite:14]{index=14}
+
+Each pattern is a normalized mapping construct:
+
+pattern = {
+  "patternId": string,
+  "anchor": string,              // e.g., LineExtensionAmount_BBIE
+  "decision": "SEAMLESS" | "CONTEXTUAL_TRANSFORM",
+  "relevantAxes": string[],
+  "contextSignature": object,    // e.g., subset of EC_common_on_KCD
+  "transform": mappingJson.transform,
+  "constraints": mappingJson.constraints,
+  "references": explanationJson.references
+}
+
+Patterns with empty relevantAxes or contextSignature that ignores dials are
+context-invariant and thus highly reusable (REX contribution).
+
+
+9) Quality gates and KPIs
+
+The mapping engine SHOULD compute or at least support the following KPIs,
+aligned with the doc: :contentReference[oaicite:15]{index=15} :contentReference[oaicite:16]{index=16}
+
+- MBEC (Mapping-Basis Evidence Count):
+    ≥ 1 standards reference per mapping (from Explanation JSON).
+
+- EVR (Execution / Validation Rate):
+    ratio of passed tests vs total tests in mappingJson + explanationJson.
+
+- ECR (Explanation Clarity Rating):
+    reviewer score (0–100%) based on TL;DR quality and reasoning clarity.
+
+- REX (Reuse Index):
+    how often a pattern from Pattern Index is reused across different
+    profile pairs / scenarios.
+
+- SRD (Source Diversity):
+    diversity of standards/sources cited (UBL, Peppol, EN 16931, ISO, etc.).
+
+Quality gates (suggested):
+
+- MBEC ≥ 1 for every mapping; reject mappings with no references.
+- EVR = 100% for all automated tests.
+- ECR ≥ 80% after reviewer check for explanations.
+- REX tracking upward over time as patterns accumulate. 
+
+
+10) Non-goals and constraints
+
+- The mapping engine MUST NOT:
+  - alter Mission-EC artifacts,
+  - introduce new dials or categories at runtime,
+  - hard-code domain semantics; all behavior comes from EC + configuration
+    (bie_catalog, schemaPaths, transform rules).
+
+- This mission does not specify how to execute XSD/Schematron validators; it
+  only requires that mappings and explanations be rich enough so that such
+  validators can be applied and logged separately.
+
+
+11) LLM Execution Notes (non-normative, but RECOMMENDED)
+
+When a language model executes this mission, it SHOULD:
+
+E1. Announce phases clearly:
+
+    - “Phase M1 – Shared Mapping Surface (presence overlap + EC intersection).”
+    - “Phase M2 – Classification (SEAMLESS / CONTEXTUAL_TRANSFORM / NO_MAPPING).”
+    - “Phase M3 – Mapping & Explanation JSON.”
+
+E2. For each phase, summarize:
+
+    - key inputs (sizes of S_present, T_present, number of candidates),
+    - key decisions (which BIEs are SEAMLESS, CONTEXTUAL_TRANSFORM, NO_MAPPING),
+    - snippets from mapping.mra and mapping.explanations JSONs.
+
+E3. For any given componentId X, be able to answer:
+
+    - Is X present in source/target (EC≠∅)?
+    - What is KCD(X) / relevantAxes?
+    - What is EC_common(X) on those axes?
+    - What is decision(X)?
+    - Show mappingJson and explanationJson for X, if any.
+
+E4. For any non-SEAMLESS mapping, emit at least one test in mappingJson.tests
+    or explanationJson.validation that demonstrates the logic (e.g., VAT
+    calculation, reverse charge behavior).
+
+E5. Never mutate EC or profile schemas while explaining decisions.

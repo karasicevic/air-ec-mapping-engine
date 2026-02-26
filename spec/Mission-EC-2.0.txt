@@ -1,1 +1,496 @@
-PASTE THE NORMATIVE TEXT HERE; DO NOT GUESS.
+EC
+Mission-EC-2.1:
+Mission v2 
+This specification is referred to as Mission-EC-2.1 in other mission files.
+----------------------------------------------------------------
+0) Goal & Required Deliverables
+----------------------------------------------------------------
+
+Given a conforming input bundle and one or more IUCs (provided separately), compute deterministically:
+
+• Step 1 — Policy filtering of assignments (multi-witness).
+• Step 2 — OC (Overall Context) bottom-up on the component graph.
+• Step 3 — EC (Effective Context) top-down for each IUC.
+• Step 4 — Profile Schema for each IUC from its EC.
+
+Return four JSON artifacts per run (filenames are normative):
+
+• step1-prefiltered.json
+• step2-oc.json
+• step3-ec.<profileId>.json (per IUC)
+• step4-profile.<profileId>.json (per IUC)
+
+Optionally also return validation.json (self-audit; see §8).
+
+• The system must validate the entire input bundle before running Steps 1–4.
+• A component is included in a profile iff its EC ≠ ∅.
+• All tuple checks are performed on whole tuples using the matching rules (no per-axis partial decisions).
+• Categories are opaque dot-notated paths and are never expanded into atom lists.
+
+----------------------------------------------------------------
+1) Input Contract 
+----------------------------------------------------------------
+
+Top-level input JSON object (IUCs are not included here):
+
+{
+  "version": "...",
+  "meta": { "id": "<UUID>", "createdAt": "<ISO8601>", "author": "<str>", "description": "<str>" },
+  "taxonomy": { ... },
+  "policy": { ... },
+  "componentGraph": { ... },
+  "assignedBussinesContext": [ ... ]
+}
+
+IUCs are provided separately (see §1.5).
+
+
+the EC input bundle is UseCase-free and IUCs are passed as separate objects. 
+----------------------------------------------------------------
+1.1 Taxonomy
+----------------------------------------------------------------
+
+• keys: only axes used by tuples (e.g., ["Region","Channel","Audience"]). Do not include UseCase.
+• placeholders: one canonical wildcard per key, e.g.
+  { "Region":"Region.<Any>", "Channel":"Channel.<Any>", "Audience":"Audience.<Any>" }
+• categories: dot-tokens; ancestor-closed. If Region.EU.DE exists, then Region and Region.EU must exist.
+• defaults: optional per key; values must be concrete categories (never placeholders).
+• rules: { "delimiter": ".", "caseSensitive": true } (default true if absent).
+
+Validation (combined from v1 + v2):
+• taxonomy.keys must be unique.
+• Tuples may contain only taxonomy.keys.
+• Placeholders must not appear in taxonomy.categories or taxonomy.defaults.
+• categories must be ancestor-closed using taxonomy.rules.delimiter (default ".").
+• taxonomy.rules.caseSensitive controls whether matching is case-sensitive; there is no implicit lowercasing.
+
+----------------------------------------------------------------
+1.2 Policy
+----------------------------------------------------------------
+
+e.g.{
+  "policyKeys": ["Region","Channel","Audience"],
+  "legalTuples": [ { ... }, ... ]
+}
+
+Canonical field names are exactly policyKeys and legalTuples (no spaces/variants). Matching uses only
+policyKeys and is always whole-tuple: all policyKeys must match simultaneously for a tuple to be accepted.
+
+Requirements preserved from v1:
+• policy.policyKeys ⊆ taxonomy.keys.
+• Tokens in legalTuples must be valid CATEGORY or PLACEHOLDER values under the taxonomy rules.
+• legalTuples are evaluated in array order; same inputs must always yield the same witness indices.
+
+----------------------------------------------------------------
+1.3 Component Graph
+----------------------------------------------------------------
+
+{
+  "rootABIE": "<ABIE id>",
+  "rules": { "maxFixpointRounds": 8 },
+
+  "abies": [ { "id": "ABIE.X", "childrenBBIE": [ ... ], "childrenASBIE": [ ... ] }, ... ],
+  "asbies": [ { "id": "ASBIE.X", "sourceABIE": "ABIE.A", "targetABIE": "ABIE.B" }, ... ],
+  "bbies":  [ { "id": "BBIE.X", "ownerABIE": "ABIE.A" }, ... ]
+}
+
+• IDs are globally unique.
+• rootABIE is required.
+• If the graph contains cycles, Steps 2 and 3 must use bounded fixpoint iteration (≤ maxFixpointRounds, default 8).
+
+Validation (from v1):
+• All referenced component IDs must resolve correctly (ABIE/ASBIE/BBIE).
+• The implementation must correctly detect whether the graph is acyclic (supporting reverse topological order)
+  or cyclic (requiring fixpoint). Non-convergent cycles are reported via the uniform error envelope (see §7).
+
+----------------------------------------------------------------
+1.4 Assigned Bussines Context
+----------------------------------------------------------------
+
+Assigned Bussines Contexts are component-scoped tuples (only taxonomy keys allowed):
+
+e.g.{ "componentId": "<BBIE|ASBIE id>", "tuples": [ { "Region":"...", "Channel":"...", "Audience":"..." }, ... ] }
+
+• If a componentId is absent from the Step 1 output ("prefiltered"), treat Prefiltered(componentId) = [].
+
+----------------------------------------------------------------
+1.5 IUCs (Provided Separately)
+----------------------------------------------------------------
+
+IUCs are not part of the EC-Input files. Both source and target IUCs are in IUCs file. They use the same taxonomy keys. Any UseCase field is metadata only and ignored by intersections.
+
+Normative IUC template:
+ 
+{
+  "id": "Profile.<Label>",
+  "description": "<free text>",
+  "tuples": [ { "Region":"...", "Channel":"...", "Audience":"..." } ],
+  "evaluationRules": { "inheritDefaults": true, "independent": true },
+  "trace": { "computedBy": "EC-Algorithm-2.0", "timestamp": "<ISO8601>" }
+}
+
+----------------------------------------------------------------
+2) Token & Set Semantics
+----------------------------------------------------------------
+
+Token model:
+
+Each tuple is { Key1: Token1, Key2: Token2, … }, where each Token is either:
+
+• CATEGORY — a dot-notated value in taxonomy.categories; leaf categories act as atomic values. Categories are opaque
+  tokens and are never expanded into atom lists.
+• PLACEHOLDER — the wildcard token defined in taxonomy.placeholders[Key] (e.g., "<Key>.<Any>").
+
+Inside Steps 1–3 of this mission, and in all OC/EC artifacts that it emits, every tuple must contain exactly one token per taxonomy key after defaults (see §3). Downstream phases (including Mission-Mapping) MAY derive projected tuples over a subset of keys for intermediate calculations (e.g. KCD projections), but those projected tuples MUST still use the same CATEGORY/PLACEHOLDER semantics and the same T_intersect/T_union rules on the keys that remain.
+
+Top wildcard:
+• <Any> is the top ancestor on its key; <Any> ∩ X = X.
+
+Ancestry:
+• Delimiter is taxonomy.rules.delimiter (default ".").
+• A is ancestor-of B iff B == A or B starts with A + delimiter.
+
+Per-key intersection rules:
+
+• Placeholder vs X → X    (e.g., <Any> ∩ X = X).
+• Same category → that category.
+• Category vs ancestor/descendant → the narrower (descendant) token, if ancestry holds.
+• Two unrelated concretes → no match (∅).
+
+Tuple operations:
+
+• intersect_tuple(t1, t2) → per-key intersection; if any key yields ∅, the whole intersection is ∅.
+• T_intersect(S, R) → pairwise intersections of S×R; keep only non-empty intersections; exact dedup on the result set.
+• T_union(S1, S2, …) → union with exact dedup only (no subsumption pruning anywhere inside Steps 1–3).
+• The computational structure is always set-based; tuple equality is equality across all taxonomy.keys.
+• No subsumption pruning is used inside Steps 1–3; pruning happens only in explicit "collapse" phases (§5.1, §5.3).
+
+Determinism:
+• If ordering is needed, sort children by (kind,id) with ABIE < ASBIE < BBIE.
+• After normalization/dedup, keep array order stable to support reproducible hashing (§8).
+
+----------------------------------------------------------------
+3) Step 1 — Policy Filtering (Multi-Witness)
+----------------------------------------------------------------
+
+Inputs: assignments, policy, taxonomy
+Outputs: prefiltered (by kind/component) + per-tuple log.
+
+3.1 Defaults and Normalization
+
+Defaults → Normalize.
+• Apply taxonomy.defaults (concrete only) to each tuple before matching; log all fills.
+• Keep only taxonomy.keys in a stable key order across the tuple.
+
+These rules supersede v1 but retain its intent: defaults are applied before any policy matching and are logged.
+
+3.2 Scan All Witnesses (Multi-Witness from v2)
+
+For each normalized tuple T, scan every policy.legalTuples entry in index order. For each legal L that matches
+on policy.policyKeys, emit the narrowed tuple T_L (per-key intersection rules from §2).
+
+• Matching is whole-tuple over policyKeys: all keys must succeed for a match.
+• For a single T, multiple legal tuples may match. Emit all narrowed tuples T_L and record all witness indices.
+
+Dedup per input tuple (exact). If no L matches → drop with reason "no-legal-match".
+
+Aggregate per component (BBIE/ASBIE) and dedup again (exact).
+
+3.3 Step 1 Log Shape 
+
+Log entry (per input tuple):
+
+{
+  "componentId":"...",
+  "tupleIndex":0,
+  "action":"kept-multi"|"dropped",
+  "fills":{ "Channel":"Channel.Web" },
+  "witnesses":[...],
+  "tupleBefore":{...},
+  "tuplesAfter":[ { ... }, { ... } ]
+}
+
+• Each kept tuple must reference at least one valid witness index.
+• Dropped tuples must record a reason (e.g., "no-legal-match").
+• Unknown or invalid tokens must never pass validation; such tuples should be rejected during global validation
+  or dropped with an explicit reason.
+
+3.4 Determinism
+
+• policy.legalTuples are evaluated in array order; witness indices are 0-based and deterministic.
+• Same input → same outputs and same log ordering.
+
+----------------------------------------------------------------
+4) Step 2 — Overall Context (OC) (Bottom-Up, IUC-Agnostic)
+----------------------------------------------------------------
+
+Definitions (unchanged from v2, aligned with v1 semantics):
+
+• BBIE p:          OC(p) = Prefiltered(p)
+• ASBIE L(A→B):    OC(L) = T_intersect( Prefiltered(L), OC(B) )
+• ABIE A:          OC(A) = T_union( ⋃ OC(childrenBBIE), ⋃ OC(childrenASBIE) ) (exact dedup only)
+
+Evaluation:
+
+1) Build ABIE dependency graph using ASBIE.targetABIE.
+2) If the graph is acyclic, evaluate ABIEs in reverse topological order (leaves → root).
+3) If cycles exist, iterate bottom-up until a fixpoint or maxFixpointRounds (default 8).
+
+Validation:
+• OC(ASBIE) ⊆ Prefiltered(ASBIE) and OC(ASBIE) ⊆ OC(targetABIE).
+• Each child’s OC ⊆ its parent ABIE’s OC.
+• Every OC tuple originates from Step 1 (no new tokens introduced).
+
+Non-convergence:
+• On non-convergent cycles, the engine must return only an error envelope:
+  { "error":"Step2", "reason":"OC_non_convergent_cycle" }
+  and must not emit partial OC data.
+
+----------------------------------------------------------------
+5) Step 3 — Effective Context (EC) (Top-Down, IUC-Seeded)
+----------------------------------------------------------------
+
+Let P be an IUC with tuples over the taxonomy keys.
+
+5.1 Seed 
+
+seed = T_intersect( OC(rootABIE), union(P.tuples) )
+
+Seed collapse (ancestor-preferred):
+• If a seed tuple is a strict descendant of another seed tuple (on all keys), drop the descendant.
+  Example: keep {EU,Web,B2B}, drop {EU.DE,Web,B2B}.
+• profileTuples(P) is treated as a SET before intersection: exact dedup on identical tuples.
+• If seed is empty, the profile is "not realizable". The engine should still return a valid envelope for P indicating
+  non-realizability (e.g., EC maps empty and a flag in validation).
+
+5.2 Gates & Propagation
+
+Gate(rootABIE) = seed.
+
+Non-root ABIE B:
+• Gate(B) = ⋃ EC(L) over incoming links L : ?→B (union of all incoming link ECs).
+
+Stand-alone ABIE (no incoming links):
+• Gate(B) = OC(B).
+
+ASBIE L(A→B):
+• EC(L) = T_intersect( OC(L), EC(A) )
+
+ABIE B:
+• EC(B) = T_intersect( OC(B), Gate(B) )
+
+BBIE p of B:
+• EC(p) = T_intersect( OC(p), EC(B) )
+
+Iteration:
+• Initialize EC values and iterate to fixpoint (≤ maxFixpointRounds, default 8). Step 3 is generally shrinking:
+  EC sets can only stay the same or become more specific / smaller per iteration.
+
+Non-convergence:
+• Non-convergence must return only:
+  { "error":"Step3", "reason":"EC_non_convergent_cycle" }
+  with no partial EC data.
+
+Validation (from v1, still binding):
+• EC(X) ⊆ OC(X) for all nodes X.
+• EC(L) ⊆ EC(sourceABIE) for every ASBIE L.
+• EC(B) ⊆ OC(B) and ⊆ Gate(B) for every ABIE B.
+• EC(BBIE) ⊆ EC(ownerABIE) for every BBIE.
+• EC(root) ≠ ∅ implies the profile is realizable; EC(root) = ∅ implies not realizable.
+
+5.3 Emission Collapse (Ancestor-Preferred, v2 Enhancement)
+
+Before serialization, for each component (ABIE/ASBIE/BBIE) drop tuples subsumed by an ancestor tuple within that
+component’s EC (ancestor-preferred collapse). Internal math inside Steps 1–3 still uses exact-dedup-only sets;
+collapse is a separate, explicit phase.
+
+The implementation must log which tuples were dropped and which ancestor was kept (see §8, emissionCollapse).
+
+----------------------------------------------------------------
+6) Step 4 — Profile Schema (Per IUC)
+----------------------------------------------------------------
+
+Emit only components with EC ≠ [].
+
+Normative v2 shape:
+
+{
+  "version": "ProfileSchema-1.0",
+  "profileId": "<IUC id>",
+  "rootABIE": "<root>",
+  "includes": {
+    "ABIE": [ { "id":"<abieId>", "ecTuples":[ ... ] } ],
+    "ASBIE": [ { "id":"<asbieId>", "ecTuples":[ ... ], "sourceABIE":"...", "targetABIE":"..." } ],
+    "BBIE":  [ { "id":"<bbieId>", "ownerABIE":"<abieId>", "ecTuples":[ ... ] } ]
+  },
+  "notes": [ "seed: ancestor-preferred collapse", "emission: collapse per component", "exact-dedup inside steps" ],
+  "trace": { "sourceEC": "Step3" }
+}
+
+• Only nodes where EC(node) ≠ ∅ may appear in the profile schema.
+• The root ABIE must appear in the schema if and only if EC(rootABIE) ≠ ∅; otherwise the profile is not realizable.
+• For each ASBIE L: if EC(L) ≠ ∅, then its target ABIE must also appear in the schema with EC(target) ≠ ∅.
+• EC(L) ≠ ∅ implies the presence of both the link and its target in the schema.
+• Children within each ABIE’s includes can be sorted by (kind, id) for determinism.
+
+For any downstream algorithm (including mapping), a profile P is the triple:
+
+- P.IUC – the input profile object used as the seed for computation
+          (profile key, assigned bussiness context, etc.),
+- P.EC – the Effective Context results produced in Step 3 for that IUC,
+- P.ProfileSchema – the pruned schema produced in Step 4 for that IUC
+                    (only components with EC ≠ ∅).
+
+Any mapping algorithm MUST treat a “profile” in this document as this triple
+(IUC, EC, ProfileSchema). It is not allowed to reinterpret or modify these
+values; they are read-only outputs of this mission.
+
+----------------------------------------------------------------
+7) Error Envelope (Uniform)
+----------------------------------------------------------------
+
+All errors must use the following envelope (v2, extending v1):
+
+{
+  "error": "Validation|Step1|Step2|Step3|Step4",
+  "reason": "<text>",
+  "details": { "round": 5, "nodeId": "..." }  // details optional; structure may vary per implementation
+}
+
+Notes:
+• Non-convergence and missing-section errors MUST use this envelope.
+
+----------------------------------------------------------------
+8) Determinism & Self-Validation (validation.json)
+----------------------------------------------------------------
+
+Alongside the four main artifacts, the engine SHOULD emit validation.json:
+
+{
+  "checklist": {
+    "defaultsAppliedBeforeStep1": true,
+    "multiWitnessEnabled": true,
+    "exactDedupOnly": true,
+    "noSubsumptionPruningInsideSteps": true,
+    "seedCollapseApplied": true,
+    "emissionCollapseAppliedAllLevels": true,
+    "fixpointRoundsStep2": 1,
+    "fixpointRoundsStep3": 1
+  },
+  "hashes": {
+    "step1-prefiltered.json.sha256": "<hex>",
+    "step2-oc.json.sha256": "<hex>",
+    "step3-ec.<profileId>.json.sha256": "<hex>",
+    "step4-profile.<profileId>.json.sha256": "<hex>"
+  },
+  "logs": {
+    "step1": [ /* per-tuple witness logs */ ],
+    "seedCollapse": [ /* keptAncestor vs dropped */ ],
+    "emissionCollapse": {
+      "ABIE": { "<abieId>": [ { "keptAncestor": {...}, "dropped": {...} } ] },
+      "ASBIE": { /* ... */ },
+      "BBIE":  { /* ... */ }
+    }
+  }
+}
+
+Canonical hashing:
+• Sort object keys lexicographically (while keeping array order).
+• Serialize to a compact JSON string (no extra whitespace).
+• Compute SHA-256 of that string and store as hexadecimal.
+
+These hashes are intended for reproducibility checks and golden tests as suggested in v2.
+
+----------------------------------------------------------------
+9) Guardrails & Defaults (Consolidated)
+----------------------------------------------------------------
+
+• Whole-tuple policy:
+  – Step 1 matches on all policy.policyKeys together; no per-axis acceptance.
+• No atomization:
+  – Categories are opaque dot-paths; never expanded into atoms.
+• Placeholder scope:
+  – Placeholders (e.g., "<Key>.<Any>") are symbolic wildcards in tuples/policy only and are never added
+    to taxonomy.categories or taxonomy.defaults.
+• Defaults timing:
+  – Apply taxonomy.defaults before Step 1; log all fills; do not re-apply later in the pipeline.
+• T_union determinism:
+  – T_union performs exact deduplication only (no subsumption elimination) inside Steps 1–3.
+• Fixpoint bounds:
+  – OC (Step 2, typically growing) and EC (Step 3, typically shrinking) use componentGraph.rules.maxFixpointRounds
+    (default: 8) and must either converge or return a non-convergence error envelope.
+• Deterministic ordering:
+  – policy.legalTuples evaluated in array order.
+  – Children sorted by (kind,id) when the engine needs to impose an order (e.g., for logs or schemas).
+  – Same input → same outputs, same logs, same hashes.
+
+----------------------------------------------------------------
+10) IUC Template (Normative, from v2)
+----------------------------------------------------------------
+
+For convenience, the normative IUC template is repeated here:
+
+{
+  "id": "Profile.<Label>",
+  "description": "<free text>",
+  "tuples": [ { "Region":"...", "Channel":"...", "Audience":"..." } ],
+  "evaluationRules": { "inheritDefaults": true, "independent": true },
+  "trace": { "computedBy": "EC-Algorithm-2.0", "timestamp": "<ISO8601>" },
+  "metadata": { "UseCase": "<optional>" }  // ignored by intersections
+}
+
+
+-------------------------------------------------------------------
+
+Any downstream phase (for example, the mapping mission) MUST reuse these same
+tuple and set semantics:
+
+- The same CATEGORY / PLACEHOLDER rules,
+- The same equality and dedup semantics for tuples and sets,
+- The same definitions of T_intersect and T_union,
+- The same determinism requirements.
+
+No downstream phase is allowed to redefine or partially change these rules.
+
+A separate mission file (Mission-Mapping) will specify how the outputs of the
+EC phase are used to build, explain, and validate mappings. That file starts strictly
+after Step 3 and Step 4 defined here.
+
+
+ LLM Execution Notes (non-normative)
+
+When a language model (LLM) is used as the execution engine for this mission,
+it SHOULD follow these traceability guidelines:
+
+1. Step announcements
+
+   Before starting each major step (Step 1–4), the LLM SHOULD write a short
+   line identifying the mission and step, for example:
+
+   - "Executing Mission-EC-2.1, Step 1 — Policy prefilter."
+   - "Executing Mission-EC-2.1, Step 3 — Effective Context (EC)."
+
+2. Inputs and outputs per step
+
+   For each step, the LLM SHOULD:
+
+   - Briefly summarize the inputs (e.g. number of tuples, number of components).
+   - Describe the main operations (e.g. which tuple operations are applied).
+   - Show the resulting JSON artifacts, or at least the subsets relevant to
+     the current scenario.
+
+3. Tuple operations
+
+   On request, the LLM MUST be able to explain any tuple operation, by
+   listing:
+
+   - The input sets (or representative examples),
+   - The resulting set,
+   - Which tuples were removed and why (e.g. no witness, no match, etc.).
+
+4. No semantic extensions
+
+   The LLM MUST NOT invent new dials, category names, or tuple semantics
+   beyond those defined in the EC-Input and this mission. If the input refers
+   to an unknown dial or category, it MUST be treated as an error or handled
+   according to explicit error-handling rules, not silently normalized.Mission v2 

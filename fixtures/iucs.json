@@ -1,0 +1,44 @@
+[
+  {
+    "id": "Profile.IUC_source",
+    "tuples": [
+      {
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.S20",
+        "CT": "CT.PT30"
+      }
+    ],
+    "description": "Source profile seed (DE Invoice(380), TAX.S20, CT.PT30)",
+    "evaluationRules": {
+      "inheritDefaults": true,
+      "independent": true
+    },
+    "trace": {
+      "computedBy": "EC-Algorithm-2.0",
+      "timestamp": "2026-02-13T00:00:00Z"
+    }
+  },
+  {
+    "id": "Profile.IUC_target",
+    "tuples": [
+      {
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.AE0",
+        "CT": "CT.PT30"
+      }
+    ],
+    "description": "Target profile seed (NL Invoice(380), TAX.AE0, CT.PT30)",
+    "evaluationRules": {
+      "inheritDefaults": true,
+      "independent": true
+    },
+    "trace": {
+      "computedBy": "EC-Algorithm-2.0",
+      "timestamp": "2026-02-13T00:00:00Z"
+    }
+  }
+]

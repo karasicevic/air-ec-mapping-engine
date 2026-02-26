@@ -1,1 +1,188 @@
-PASTE THE NORMATIVE TEXT HERE; DO NOT GUESS.
+Mission-Execution-Protocol-2.1
+EC + Mapping (Mission-EC-2.1 and Mission-Mapping-2.1)
+
+0) Pre-conditions
+
+The engine (including an LLM) MUST:
+
+- Have access to:
+  - The Mission-EC-2.1 (mission v2) specification.
+  - The Mission-Mapping-2.1 specification.
+- Receive as input:
+  - An EC-Input bundles for source and target.
+  - A list of IUC objects (one per profile - source and target) (see Mission-EC-2.1 §1.5 and §6).
+  - A mapping configuration object containing:
+    - profilePairs (sourceProfileId, targetProfileId) (see Mission-Mapping-2.1 §2).
+    - bie_catalog(see Mission-Mapping-2.1 §3.1).
+    - schemaPaths (see Mission-Mapping-2.1 §3.3).
+
+All normative behavior and explanations for the following actions are defined in the mission files.
+This protocol does not define new behavior; it only references mission sections.
+
+
+0.1 Normative precedence (MUST)
+
+Mission-EC-2.1 and Mission-Mapping-2.1 are normative.
+This Execution Protocol is a structural index that lists a recommended deterministic order and references the relevant mission sections.
+
+For every numbered step below, the engine MUST re-read and apply the referenced mission sections.
+The engine MUST NOT execute a step using only this protocol description.
+
+Conflict rule:
+If this Execution Protocol conflicts with a mission file, the mission file wins.
+The engine MUST stop and report the conflict.
+
+Silence rule:
+If this Execution Protocol is silent about a detail that is defined in a mission file, the mission definition applies.
+If both are silent, the engine MUST stop and ask for clarification.
+
+No new behavior:
+The engine MUST NOT add steps, rules, artifacts, filenames, tuple semantics, or validation logic that are not defined in the missions and/or explicitly referenced here.
+
+0.2 Mission digest (RECOMMENDED for LLM execution)
+
+Before running Phase 1 or 2, the engine SHOULD produce a short “mission digest”:
+
+EC mission: steps, required inputs, normative filenames, determinism/validation constraints.
+
+Mapping mission: inputs, profile definition, config contract, outputs, constraints.
+This digest is used to cross-check that the Execution Protocol is only an index.
+
+------------------------------------------------------------
+1) Run Mission-EC-2.1 (EC phase) for all IUCs
+------------------------------------------------------------
+
+NOTE: Run Mission-EC-2.1 once per EC-Input bundle (e.g. one for source, one for target).
+
+1.1 Validate EC input
+
+- Load the EC-Input-1.1 and EC-Input-2.1.
+- Validate taxonomy (Mission-EC-2.1 §1.1).
+- Validate policy (Mission-EC-2.1 §1.2).
+- Validate componentGraph (Mission-EC-2.1 §1.3).
+- Validate assigned business context / assignments (Mission-EC-2.1 §1.4).
+- Validate IUCs (Mission-EC-2.1 §1.5, §10).
+
+If any validation fails, emit an error envelope as defined in Mission-EC-2.1 §7 and stop.
+
+1.2 Step 1 — Policy filtering (multi-witness)
+
+- Execute Step 1 according to Mission-EC-2.1 §3.
+- Emit step1-prefiltered.json (normative filename, Mission-EC-2.1 §0).
+- Log Step 1 witnesses as required for validation.json (Mission-EC-2.1 §8).
+
+1.3 Step 2 — Overall Context (OC)
+
+- Execute Step 2 bottom-up on the component graph (Mission-EC-2.1 §4).
+- Emit step2-oc.json (normative filename, Mission-EC-2.1 §0).
+
+1.4 Step 3 — Effective Context (EC) for each IUC
+
+For each IUC:
+
+- Seed EC at the root ABIE as specified in Mission-EC-2.1 §5.1.
+- Propagate EC using the ABIE/ASBIE/BBIE rules (Mission-EC-2.1, §5.2).
+- Perform fixpoint iteration (Mission-EC-2.1 §5.2).
+- Apply emission collapse (Mission-EC-2.1 §5.3).
+- Emit step3-ec.<profileId>.json for this IUC (Mission-EC-2.1 §0, §5).
+
+1.5 Step 4 — Profile Schema for each IUC
+
+For each IUC:
+
+- Build ProfileSchema from EC results as specified in Mission-EC-2.1 §6.
+- Emit step4-profile.<profileId>.json (Mission-EC-2.1 §0, §6).
+
+1.6 Optional EC validation
+
+- Optionally emit validation.json according to Mission-EC-2.1 §8.
+
+------------------------------------------------------------
+2) Run Mission-Mapping-2.1 (mapping phase) for all profile pairs
+------------------------------------------------------------
+2.1 Load EC artifacts as profiles
+
+- For each profileId:
+  - Construct profile P = (P.IUC, P.EC, P.ProfileSchema) using:
+    - IUC object for that profileId.
+    - step3-ec.<profileId>.json.
+    - step4-profile.<profileId>.json.
+  - Treat P as read-only (Mission-EC-2.1 §6, Mission-Mapping-2.1 §1.1–1.2).
+
+2.2 For each profile pair (S, T) in profilePairs
+
+For each pair (sourceProfileId, targetProfileId) in mapping configuration:
+
+- Locate:
+  - Source profile S = (S.IUC, S.EC, S.ProfileSchema).
+  - Target profile T = (T.IUC, T.EC, T.ProfileSchema).
+  - (Mission-Mapping-2.1 §1.1–1.2, §2).
+
+Then perform steps 2.2.1–2.2.5.
+
+2.2.1 Presence Overlap (Mission-Mapping-2.1 §5)
+
+- Compute:
+  - S_present = { X | EC_S(X) ≠ ∅ }.
+  - T_present = { X | EC_T(X) ≠ ∅ }.
+  - overlapIds = S_present ∩ T_present.
+
+2.2.2 Obtain Key Context Dimensions (KCD) (Mission-Mapping-2.1 §3.1 and §3.2)
+
+For each X in overlapIds:
+
+- Look up KCD(X) = bie_catalog[X].relevantAxes (Mission-Mapping-2.1 §3.1).
+- If bie_catalog[X] exists but relevantAxes is missing, treat KCD(X) as [] (Mission-Mapping-2.1 §3.2).
+
+2.2.3 Context compatibility on KCD (Mission-Mapping-2.1 §5.2, §6)
+
+For each X in overlapIds:
+
+- Compute:
+  - ECs = project(EC_S(X), KCD(X)).
+  - ECt = project(EC_T(X), KCD(X)).
+- If ECs = ∅ or ECt = ∅:
+  - decision(X) = NO_MAPPING
+- Otherwise:
+  - Compute ECcommon = T_intersect(ECs, ECt).
+  - If ECcommon ≠ ∅:
+    - decision(X) = SEAMLESS
+  - If ECcommon = ∅ and ECs ≠ ∅ and ECt ≠ ∅:
+    - decision(X) = CONTEXTUAL_TRANSFORM
+
+For SEAMLESS decisions, set
+subtype(X) = IDENTITY or DERIVED, as a technical subtype, per §6 C3.
+
+2.2.4 MRA (Mapping Rule Artifact) construction (Mission-Mapping-2.1 §7.1–7.3)
+
+For each X with decision(X) ∈ {SEAMLESS, CONTEXTUAL_TRANSFORM}, construct an MRA_X exactly as in Mission-Mapping-2.1 §7.1–7.3:
+
+-componentId = X,
+
+-decision and subtype per classification (and optional subtype logic),
+
+-relevantAxes = KCD(X),
+
+-EC_source = EC_S(X), EC_target = EC_T(X),
+
+-EC_common_on_KCD = EC_common(X),
+
+-mappingJson filled as in §7.2 (paths from schemaPaths, transform, constraints, tests, provenance),
+
+-explanationJson filled as in §7.3 (summary_tldr, reasoning_steps, references, validation…).
+
+
+2.2.5 Emit MRAs and optional validation
+
+- Emit:
+	mapping.mra.<sourceProfileId>.<targetProfileId>.json – an array of MRA_X as per Mission-Mapping-2.1 §7.1.
+	mapping.explanations.<sourceProfileId>.<targetProfileId>.json – an array of explanationJson objects as per §7.3.
+
+
+------------------------------------------------------------
+3) Determinism
+------------------------------------------------------------
+
+- All actions above MUST be deterministic given the same inputs, as required by:
+  - Mission-EC-2.1 (determinism and hashing, §8, §9).
+  - Mission-Mapping-2.1 (determinism, §4).
