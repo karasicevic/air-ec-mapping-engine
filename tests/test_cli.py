@@ -66,6 +66,18 @@ def _iucs() -> list[dict]:
     ]
 
 
+def _iucs_source() -> list[dict]:
+    return [
+        {"id": "Profile.Source", "tuples": [{"Region": "Region.EU", "Channel": "Channel.B2B"}]},
+    ]
+
+
+def _iucs_target() -> list[dict]:
+    return [
+        {"id": "Profile.Target", "tuples": [{"Region": "Region.EU", "Channel": "Channel.B2B"}]},
+    ]
+
+
 def test_cli_run_ec_writes_normative_artifacts(tmp_path: Path) -> None:
     bundle_path = tmp_path / "bundle.json"
     iucs_path = tmp_path / "iucs.json"
@@ -289,3 +301,52 @@ def test_cli_run_all_stops_on_ec_validation_failure(tmp_path: Path) -> None:
     )
     assert result.exit_code != 0
     assert '"error":"Validation"' in result.stdout
+
+
+def test_cli_run_all_pair_writes_separate_source_target_and_mapping(tmp_path: Path) -> None:
+    bundle_path = tmp_path / "bundle.json"
+    source_iucs_path = tmp_path / "iucs_source.json"
+    target_iucs_path = tmp_path / "iucs_target.json"
+    cfg_path = tmp_path / "mapping_config.json"
+    out_dir = tmp_path / "pair_out"
+    bundle_path.write_text(json.dumps(_bundle()), encoding="utf-8")
+    source_iucs_path.write_text(json.dumps(_iucs_source()), encoding="utf-8")
+    target_iucs_path.write_text(json.dumps(_iucs_target()), encoding="utf-8")
+    cfg_path.write_text(
+        json.dumps(
+            {
+                "profilePairs": [{"sourceProfileId": "Profile.Source", "targetProfileId": "Profile.Target"}],
+                "bie_catalog": {
+                    "BBIE.InvoiceID": {"anchor": "InvoiceID_BBIE", "relevantAxes": ["Region"]},
+                },
+                "schemaPaths": {
+                    "source": {"BBIE.InvoiceID": "$.invoice.id"},
+                    "target": {"BBIE.InvoiceID": "/Invoice/cbc:ID"},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "run-all-pair",
+            "--source-bundle",
+            str(bundle_path),
+            "--target-bundle",
+            str(bundle_path),
+            "--source-iucs",
+            str(source_iucs_path),
+            "--target-iucs",
+            str(target_iucs_path),
+            "--mapping-config",
+            str(cfg_path),
+            "--output-dir",
+            str(out_dir),
+        ],
+    )
+    assert result.exit_code == 0
+    assert (out_dir / "source" / "step1-prefiltered.json").exists()
+    assert (out_dir / "target" / "step1-prefiltered.json").exists()
+    assert (out_dir / "mapping.mra.Profile.Source.Profile.Target.json").exists()

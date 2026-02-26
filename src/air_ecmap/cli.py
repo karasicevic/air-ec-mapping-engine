@@ -9,7 +9,7 @@ from typing import Any
 import typer
 
 from .mapping_orchestrator import run_mapping_pipeline
-from .orchestrator import run_ec_pipeline
+from .orchestrator import run_ec_pair_pipeline, run_ec_pipeline
 
 app = typer.Typer(help="AIR EC+Mapping CLI.")
 
@@ -26,7 +26,7 @@ def _load_json(path: Path) -> Any:
 
 def _dump_json(path: Path, payload: Any) -> None:
     path.write_text(
-        json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True),
+        json.dumps(payload, sort_keys=True, indent=2, ensure_ascii=True),
         encoding="utf-8",
     )
 
@@ -43,6 +43,30 @@ def _load_profiles_from_dir_and_pairs(profiles_dir: Path, pairs: list[dict[str, 
                 continue
             ec_path = profiles_dir / f"step3-ec.{profile_id}.json"
             schema_path = profiles_dir / f"step4-profile.{profile_id}.json"
+            ec_payload = _load_json(ec_path)
+            schema_payload = _load_json(schema_path)
+            profiles[profile_id] = {
+                "ec": ec_payload.get("ec", {}),
+                "profileSchema": schema_payload,
+            }
+    return profiles
+
+
+def _load_profiles_from_two_dirs(
+    source_dir: Path,
+    target_dir: Path,
+    pairs: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    profiles: dict[str, dict[str, Any]] = {}
+    for pair in pairs:
+        for profile_id, base_dir in (
+            (pair["sourceProfileId"], source_dir),
+            (pair["targetProfileId"], target_dir),
+        ):
+            if profile_id in profiles:
+                continue
+            ec_path = base_dir / f"step3-ec.{profile_id}.json"
+            schema_path = base_dir / f"step4-profile.{profile_id}.json"
             ec_payload = _load_json(ec_path)
             schema_payload = _load_json(schema_path)
             profiles[profile_id] = {
@@ -148,6 +172,98 @@ def run_all(
         _dump_json(output_dir / filename, payload)
 
     typer.echo(f"Wrote {len(ec_artifacts) + len(mapping_artifacts)} artifacts to {output_dir}")
+
+
+@app.command("run-ec-pair")
+def run_ec_pair(
+    source_bundle: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to source EC input bundle JSON"),
+    target_bundle: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to target EC input bundle JSON"),
+    source_iucs: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to source IUCs JSON array"),
+    target_iucs: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to target IUCs JSON array"),
+    output_dir: Path = typer.Option(..., file_okay=False, dir_okay=True, help="Output directory for source/target artifacts"),
+) -> None:
+    """Run EC pipeline for source and target bundles separately."""
+    try:
+        src = _load_json(source_bundle)
+        tgt = _load_json(target_bundle)
+        src_iucs = _load_json(source_iucs)
+        tgt_iucs = _load_json(target_iucs)
+    except Exception as exc:  # pragma: no cover
+        typer.echo(json.dumps({"error": "Validation", "reason": f"input-parse-error: {exc}", "details": {}}, separators=(",", ":")))
+        raise typer.Exit(code=2) from exc
+
+    result = run_ec_pair_pipeline(src, tgt, src_iucs, tgt_iucs)
+    if _is_envelope(result):
+        typer.echo(json.dumps(result, sort_keys=True, indent=2, ensure_ascii=True))
+        raise typer.Exit(code=2)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    source_dir = output_dir / "source"
+    target_dir = output_dir / "target"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    for filename, payload in result["source"]["artifacts"].items():
+        _dump_json(source_dir / filename, payload)
+    for filename, payload in result["target"]["artifacts"].items():
+        _dump_json(target_dir / filename, payload)
+
+    typer.echo(f"Wrote {len(result['source']['artifacts']) + len(result['target']['artifacts'])} artifacts to {output_dir}")
+
+
+@app.command("run-all-pair")
+def run_all_pair(
+    source_bundle: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to source EC input bundle JSON"),
+    target_bundle: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to target EC input bundle JSON"),
+    source_iucs: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to source IUCs JSON array"),
+    target_iucs: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to target IUCs JSON array"),
+    mapping_config: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to mapping config JSON"),
+    output_dir: Path = typer.Option(..., file_okay=False, dir_okay=True, help="Output directory for EC + mapping artifacts"),
+) -> None:
+    """Run EC for source/target bundles, then mapping, writing all artifacts."""
+    try:
+        src = _load_json(source_bundle)
+        tgt = _load_json(target_bundle)
+        src_iucs = _load_json(source_iucs)
+        tgt_iucs = _load_json(target_iucs)
+        cfg = _load_json(mapping_config)
+    except Exception as exc:  # pragma: no cover
+        typer.echo(json.dumps({"error": "Validation", "reason": f"input-parse-error: {exc}", "details": {}}, separators=(",", ":")))
+        raise typer.Exit(code=2) from exc
+
+    ec_pair = run_ec_pair_pipeline(src, tgt, src_iucs, tgt_iucs)
+    if _is_envelope(ec_pair):
+        typer.echo(json.dumps(ec_pair, sort_keys=True, indent=2, ensure_ascii=True))
+        raise typer.Exit(code=2)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    source_dir = output_dir / "source"
+    target_dir = output_dir / "target"
+    source_dir.mkdir(parents=True, exist_ok=True)
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    for filename, payload in ec_pair["source"]["artifacts"].items():
+        _dump_json(source_dir / filename, payload)
+    for filename, payload in ec_pair["target"]["artifacts"].items():
+        _dump_json(target_dir / filename, payload)
+
+    pairs = cfg.get("profilePairs", [])
+    try:
+        profiles = _load_profiles_from_two_dirs(source_dir, target_dir, pairs)
+    except Exception as exc:
+        typer.echo(json.dumps({"error": "Validation", "reason": f"mapping-input-parse-error: {exc}", "details": {}}, separators=(",", ":")))
+        raise typer.Exit(code=2) from exc
+
+    mapping_result = run_mapping_pipeline(profiles, cfg)
+    if _is_envelope(mapping_result):
+        typer.echo(json.dumps(mapping_result, sort_keys=True, indent=2, ensure_ascii=True))
+        raise typer.Exit(code=2)
+
+    for filename, payload in mapping_result["artifacts"].items():
+        _dump_json(output_dir / filename, payload)
+
+    total = len(ec_pair["source"]["artifacts"]) + len(ec_pair["target"]["artifacts"]) + len(mapping_result["artifacts"])
+    typer.echo(f"Wrote {total} artifacts to {output_dir}")
 
 
 def main() -> None:

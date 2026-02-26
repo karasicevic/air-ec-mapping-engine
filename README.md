@@ -19,7 +19,7 @@ Inputs:
 Command:
 
 ```powershell
-air-ecmap run-ec --bundle .\fixtures\bundle.json --iucs .\fixtures\iucs.json --output-dir .\out\ec
+air-ecmap run-ec --bundle .\fixtures\source_bundle.json --iucs .\fixtures\iucs_source.json --output-dir .\out\ec
 ```
 
 Outputs:
@@ -56,7 +56,7 @@ Inputs:
 Command:
 
 ```powershell
-air-ecmap run-all --bundle .\fixtures\bundle.json --iucs .\fixtures\iucs.json --mapping-config .\fixtures\mapping_config.json --output-dir .\out\all
+air-ecmap run-all-pair --source-bundle .\fixtures\source_bundle.json --target-bundle .\fixtures\target_bundle.json --source-iucs .\fixtures\iucs_source.json --target-iucs .\fixtures\iucs_target.json --mapping-config .\fixtures\mapping_config.json --output-dir .\out\all
 ```
 
 Outputs in one directory:

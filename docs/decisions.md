@@ -19,5 +19,17 @@
   - Treat the currently pasted mission text (internally labeled `2.1`) as normative,
     even though repository filenames remain `*-2.0.txt`.
 - Operational rule:
-  - Implement behavior from file content, not filename suffix.
-  - Keep existing filenames unchanged unless explicitly requested.
+- Implement behavior from file content, not filename suffix.
+- Keep existing filenames unchanged unless explicitly requested.
+
+## BLOCKER-2026-02-26-002: Separate IUCs per source/target bundle
+
+- Status: `RESOLVED`
+- Observed:
+  - Mission files do not explicitly state whether source and target IUCs are separate files.
+  - Latest testing requires separate IUCs for each bundle to ensure independent EC execution.
+- Decision:
+  - Support separate IUCs inputs for source and target bundles in pair execution.
+  - Pair commands will accept `source-iucs` and `target-iucs` explicitly.
+- Reason:
+  - Enables independent EC computation per bundle and matches current testing practice.

@@ -55,3 +55,20 @@ def run_ec_pipeline(ec_bundle: dict[str, Any], iucs: list[dict[str, Any]]) -> di
         "artifacts": artifacts,
         "profileIds": [i["id"] for i in iucs],
     }
+
+
+def run_ec_pair_pipeline(
+    source_bundle: dict[str, Any],
+    target_bundle: dict[str, Any],
+    source_iucs: list[dict[str, Any]],
+    target_iucs: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Run EC pipeline for source and target bundles separately, based on mapping profile pairs."""
+    source_result = run_ec_pipeline(source_bundle, source_iucs)
+    if _is_envelope(source_result):
+        return source_result
+    target_result = run_ec_pipeline(target_bundle, target_iucs)
+    if _is_envelope(target_result):
+        return target_result
+
+    return {"source": source_result, "target": target_result}

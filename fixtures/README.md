@@ -2,8 +2,10 @@
 
 These fixture files were normalized from user-provided sources:
 
-- `EC-Input-2.1.updated.json` -> `fixtures/bundle.json`
-- `IUCs.updated.json` -> `fixtures/iucs.json`
+- `EC-Input-1.1.txt` -> `fixtures/source_bundle.json`
+- `EC-Input-2.1.updated.json` -> `fixtures/target_bundle.json`
+- `IUCs.source.json` -> `fixtures/iucs_source.json`
+- `IUCs.target.json` -> `fixtures/iucs_target.json`
 - `mappingConfig.updated.json` -> `fixtures/mapping_config.json`
 
 ## Exact normalizations applied
@@ -16,7 +18,7 @@ Reason:
 Reason:
 - Current validator expects `taxonomy.categories` as an object keyed by taxonomy axis.
 
-3. `IUCs.updated.json` top-level object `{ "IUCs": [...] }` converted to plain array in `fixtures/iucs.json`.
+3. `IUCs.source.json` / `IUCs.target.json` top-level object `{ "IUCs": [...] }` converted to plain arrays.
 Reason:
 - CLI `--iucs` currently expects a JSON array of IUC objects.
 
