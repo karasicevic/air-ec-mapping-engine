@@ -6,8 +6,14 @@
     }
   ],
   "bie_catalog": {
-    "InvoiceID_BBIE": {
-      "anchor": "InvoiceID_BBIE",
+    "DespatchAdvice_ABIE": {
+      "anchor": "DespatchAdvice_ABIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "DespatchAdviceID_BBIE": {
+      "anchor": "DespatchAdviceID_BBIE",
       "relevantAxes": [
         "BP"
       ]
@@ -18,191 +24,117 @@
         "BP"
       ]
     },
-    "DocumentCurrency_BBIE": {
-      "anchor": "DocumentCurrency_BBIE",
+    "DespatchAdvice_to_Shipment_ASBIE": {
+      "anchor": "DespatchAdvice_to_Shipment_ASBIE",
       "relevantAxes": [
         "BP"
       ]
     },
-    "Invoice_ABIE": {
-      "anchor": "Invoice_ABIE",
+    "Shipment_ABIE": {
+      "anchor": "Shipment_ABIE",
       "relevantAxes": [
         "BP"
       ]
     },
-    "InvoiceLine_ABIE": {
-      "anchor": "InvoiceLine_ABIE",
+    "GrossWeight_BBIE": {
+      "anchor": "GrossWeight_BBIE",
       "relevantAxes": [
         "BP"
       ]
     },
-    "TaxTotal_ABIE": {
-      "anchor": "TaxTotal_ABIE",
+    "HandlingCode_BBIE": {
+      "anchor": "HandlingCode_BBIE",
+      "relevantAxes": [
+        "BP"
+      ]
+    },
+    "Shipment_to_TransportEvent_ASBIE": {
+      "anchor": "Shipment_to_TransportEvent_ASBIE",
       "relevantAxes": [
         "BP",
-        "TAX"
+        "TEMP"
       ]
     },
-    "PaymentTerms_ABIE": {
-      "anchor": "PaymentTerms_ABIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "Invoice_to_InvoiceLine_ASBIE": {
-      "anchor": "Invoice_to_InvoiceLine_ASBIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "Invoice_to_TaxTotal_ASBIE": {
-      "anchor": "Invoice_to_TaxTotal_ASBIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "Invoice_to_LegalMonetaryTotal_ASBIE": {
-      "anchor": "Invoice_to_LegalMonetaryTotal_ASBIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "Invoice_to_PaymentTerms_ASBIE": {
-      "anchor": "Invoice_to_PaymentTerms_ASBIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "InvoicedQuantity_BBIE": {
-      "anchor": "InvoicedQuantity_BBIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "PriceAmount_BBIE": {
-      "anchor": "PriceAmount_BBIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "LineExtensionAmount_BBIE": {
-      "anchor": "LineExtensionAmount_BBIE",
-      "relevantAxes": [
-        "BP"
-      ]
-    },
-    "TaxCategory_BBIE": {
-      "anchor": "TaxCategory_BBIE",
+    "TransportEvent_ABIE": {
+      "anchor": "TransportEvent_ABIE",
       "relevantAxes": [
         "BP",
-        "TAX"
+        "TEMP"
       ]
     },
-    "TaxableAmount_BBIE": {
-      "anchor": "TaxableAmount_BBIE",
+    "EstimatedArrivalDate_BBIE": {
+      "anchor": "EstimatedArrivalDate_BBIE",
       "relevantAxes": [
         "BP",
-        "TAX"
+        "TEMP"
       ]
     },
-    "TaxAmount_BBIE": {
-      "anchor": "TaxAmount_BBIE",
+    "TemperatureRequirement_BBIE": {
+      "anchor": "TemperatureRequirement_BBIE",
       "relevantAxes": [
         "BP",
-        "TAX"
+        "TEMP"
       ]
     },
-    "LineExtensionTotal_BBIE": {
-      "anchor": "LineExtensionTotal_BBIE",
+    "DespatchAdvice_to_Consignee_ASBIE": {
+      "anchor": "DespatchAdvice_to_Consignee_ASBIE",
       "relevantAxes": [
         "BP"
       ]
     },
-    "TaxExclusiveTotal_BBIE": {
-      "anchor": "TaxExclusiveTotal_BBIE",
-      "relevantAxes": [
-        "BP",
-        "TAX"
-      ]
-    },
-    "TaxInclusiveTotal_BBIE": {
-      "anchor": "TaxInclusiveTotal_BBIE",
-      "relevantAxes": [
-        "BP",
-        "TAX"
-      ]
-    },
-    "PayableTotal_BBIE": {
-      "anchor": "PayableTotal_BBIE",
-      "relevantAxes": [
-        "BP",
-        "TAX"
-      ]
-    },
-    "PaymentDueDate_BBIE": {
-      "anchor": "PaymentDueDate_BBIE",
+    "Consignee_ABIE": {
+      "anchor": "Consignee_ABIE",
       "relevantAxes": [
         "BP"
       ]
     },
-    "LegalMonetaryTotal_ABIE": {
-      "anchor": "LegalMonetaryTotal_ABIE",
+    "ConsigneeName_BBIE": {
+      "anchor": "ConsigneeName_BBIE",
       "relevantAxes": [
-        "BP",
-        "TAX"
+        "BP"
+      ]
+    },
+    "ConsigneeCountry_BBIE": {
+      "anchor": "ConsigneeCountry_BBIE",
+      "relevantAxes": [
+        "BP"
       ]
     }
   },
   "schemaPaths": {
     "source": {
-      "Invoice_ABIE": "$.invoice",
-      "InvoiceID_BBIE": "$.invoice.header.invoiceId",
-      "IssueDate_BBIE": "$.invoice.header.issueDate",
-      "DocumentCurrency_BBIE": "$.invoice.header.documentCurrency",
-      "Invoice_to_InvoiceLine_ASBIE": "$.invoice.lines",
-      "InvoiceLine_ABIE": "$.invoice.lines[i]",
-      "InvoicedQuantity_BBIE": "$.invoice.lines[i].invoicedQuantity",
-      "PriceAmount_BBIE": "$.invoice.lines[i].price.amount",
-      "LineExtensionAmount_BBIE": "$.invoice.lines[i].lineExtensionAmount",
-      "Invoice_to_TaxTotal_ASBIE": "$.invoice.taxTotals",
-      "TaxTotal_ABIE": "$.invoice.taxTotals[j]",
-      "TaxCategory_BBIE": "$.invoice.taxTotals[j].taxSubtotals[k].taxCategoryCode",
-      "TaxableAmount_BBIE": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount",
-      "TaxAmount_BBIE": "$.invoice.taxTotals[j].taxSubtotals[k].taxAmount",
-      "Invoice_to_LegalMonetaryTotal_ASBIE": "$.invoice.legalMonetaryTotal",
-      "LegalMonetaryTotal_ABIE": "$.invoice.legalMonetaryTotal",
-      "LineExtensionTotal_BBIE": "$.invoice.legalMonetaryTotal.lineExtensionTotal",
-      "TaxExclusiveTotal_BBIE": "$.invoice.legalMonetaryTotal.taxExclusiveTotal",
-      "TaxInclusiveTotal_BBIE": "$.invoice.legalMonetaryTotal.taxInclusiveTotal",
-      "PayableTotal_BBIE": "$.invoice.legalMonetaryTotal.payableTotal",
-      "Invoice_to_PaymentTerms_ASBIE": "$.invoice.paymentTerms",
-      "PaymentTerms_ABIE": "$.invoice.paymentTerms",
-      "PaymentDueDate_BBIE": "$.invoice.paymentTerms.paymentDueDate"
+      "DespatchAdvice_ABIE": "$.despatchAdvice",
+      "DespatchAdviceID_BBIE": "$.despatchAdvice.header.despatchAdviceId",
+      "IssueDate_BBIE": "$.despatchAdvice.header.issueDate",
+      "DespatchAdvice_to_Shipment_ASBIE": "$.despatchAdvice.shipment",
+      "Shipment_ABIE": "$.despatchAdvice.shipment",
+      "GrossWeight_BBIE": "$.despatchAdvice.shipment.grossWeight",
+      "HandlingCode_BBIE": "$.despatchAdvice.shipment.handlingCode",
+      "Shipment_to_TransportEvent_ASBIE": "$.despatchAdvice.shipment.transportEvent",
+      "TransportEvent_ABIE": "$.despatchAdvice.shipment.transportEvent",
+      "EstimatedArrivalDate_BBIE": "$.despatchAdvice.shipment.transportEvent.estimatedArrivalDate",
+      "TemperatureRequirement_BBIE": "$.despatchAdvice.shipment.transportEvent.temperatureRequirement",
+      "DespatchAdvice_to_Consignee_ASBIE": "$.despatchAdvice.consignee",
+      "Consignee_ABIE": "$.despatchAdvice.consignee",
+      "ConsigneeName_BBIE": "$.despatchAdvice.consignee.name",
+      "ConsigneeCountry_BBIE": "$.despatchAdvice.consignee.countryCode"
     },
     "target": {
-      "Invoice_ABIE": "/Invoice",
-      "InvoiceID_BBIE": "/Invoice/cbc:ID",
-      "IssueDate_BBIE": "/Invoice/cbc:IssueDate",
-      "DocumentCurrency_BBIE": "/Invoice/cbc:DocumentCurrencyCode",
-      "Invoice_to_InvoiceLine_ASBIE": "/Invoice/cac:InvoiceLine",
-      "InvoiceLine_ABIE": "/Invoice/cac:InvoiceLine[i+1]",
-      "InvoicedQuantity_BBIE": "/Invoice/cac:InvoiceLine[i+1]/cbc:InvoicedQuantity",
-      "PriceAmount_BBIE": "/Invoice/cac:InvoiceLine[i+1]/cac:Price/cbc:PriceAmount",
-      "LineExtensionAmount_BBIE": "/Invoice/cac:InvoiceLine[i+1]/cbc:LineExtensionAmount",
-      "Invoice_to_TaxTotal_ASBIE": "/Invoice/cac:TaxTotal",
-      "TaxTotal_ABIE": "/Invoice/cac:TaxTotal",
-      "TaxCategory_BBIE": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
-      "TaxableAmount_BBIE": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
-      "TaxAmount_BBIE": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
-      "Invoice_to_LegalMonetaryTotal_ASBIE": "/Invoice/cac:LegalMonetaryTotal",
-      "LegalMonetaryTotal_ABIE": "/Invoice/cac:LegalMonetaryTotal",
-      "LineExtensionTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:LineExtensionAmount",
-      "TaxExclusiveTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount",
-      "TaxInclusiveTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
-      "PayableTotal_BBIE": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
-      "Invoice_to_PaymentTerms_ASBIE": "/Invoice/cac:PaymentTerms",
-      "PaymentTerms_ABIE": "/Invoice/cac:PaymentTerms",
-      "PaymentDueDate_BBIE": "/Invoice/cac:PaymentTerms/cbc:PaymentDueDate"
+      "DespatchAdvice_ABIE": "/DespatchAdvice",
+      "DespatchAdviceID_BBIE": "/DespatchAdvice/cbc:ID",
+      "IssueDate_BBIE": "/DespatchAdvice/cbc:IssueDate",
+      "DespatchAdvice_to_Shipment_ASBIE": "/DespatchAdvice/cac:Shipment",
+      "Shipment_ABIE": "/DespatchAdvice/cac:Shipment",
+      "GrossWeight_BBIE": "/DespatchAdvice/cac:Shipment/cbc:GrossWeightMeasure",
+      "HandlingCode_BBIE": "/DespatchAdvice/cac:Shipment/cbc:HandlingCode",
+      "Shipment_to_TransportEvent_ASBIE": "/DespatchAdvice/cac:Shipment/cac:TransportEvent",
+      "TransportEvent_ABIE": "/DespatchAdvice/cac:Shipment/cac:TransportEvent",
+      "EstimatedArrivalDate_BBIE": "/DespatchAdvice/cac:Shipment/cac:TransportEvent/cbc:EstimatedArrivalDate",
+      "TemperatureRequirement_BBIE": "/DespatchAdvice/cac:Shipment/cac:TransportEvent/cbc:TemperatureRequirementCode",
+      "DespatchAdvice_to_Consignee_ASBIE": "/DespatchAdvice/cac:ConsigneeParty",
+      "Consignee_ABIE": "/DespatchAdvice/cac:ConsigneeParty",
+      "ConsigneeName_BBIE": "/DespatchAdvice/cac:ConsigneeParty/cbc:Name",
+      "ConsigneeCountry_BBIE": "/DespatchAdvice/cac:ConsigneeParty/cac:PostalAddress/cac:Country/cbc:IdentificationCode"
     }
   }
 }
