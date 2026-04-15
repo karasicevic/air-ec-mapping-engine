@@ -1,0 +1,235 @@
+Mission-ExecutionPlanning-1.0 — Contextual-Only Execution Planning
+====================================================================
+
+Status: DRAFT (normative proposal for Execution Planning implementation)
+Scope: Implements execution planning ONLY for mapping bundles whose decision == "CONTEXTUAL_TRANSFORM".
+Out of scope: applying plans to actual runtime messages; executing SEAMLESS mappings; generating target instances.
+
+Purpose
+-------
+Phase 2 can classify a component as CONTEXTUAL_TRANSFORM, but does not specify the actual transformation.
+Execution Planning closes this gap by selecting deterministic transformation rules from an external Transformation Table (TT),
+based on the runtime context and the same tuple semantics used by EC and mapping.
+
+This mission defines:
+- inputs needed for contextual execution
+- deterministic rule applicability and winner selection
+- output artifacts: execution plan + write operations + trace/validation
+- error handling and determinism requirements
+
+Normative Dependencies
+---------------------
+- Mission-EC-2.x tuple semantics are binding (taxonomy keys, categories, placeholders, delimiter rules).
+- Mission-Mapping-2.x MRA outputs are binding inputs (decision, relevantAxes/KCD, EC_source/EC_target, mappingJson).
+- No new tokens, axes, or semantics may be invented in Execution Planning.
+
+Inputs
+------
+Per profile pair (S,T):
+
+1) mapping.mra.<S>.<T>.json
+   - Array of MRAs (mapping bundles) from Mission-Mapping.
+   - Execution Planning MUST filter this array to decision == "CONTEXTUAL_TRANSFORM" only.
+
+2) source_bundle.json and target_bundle.json (or taxonomy extracted from them)
+   - Used for taxonomy keys/placeholder tokens/hierarchy rules consistent with Mission-EC.
+
+3) TransformTable-1.0 (JSON)
+   - Externalized rule configuration.
+   - Versioned configuration; must be validated against TransformTable-1.0.schema.json.
+
+4) runtimeContext (JSON)
+   - A tuple-like context signal for this execution run:
+     runtimeContext = { "source": <tuple>, "target": <tuple> }
+   - Keys MUST be taxonomy axis keys.
+   - Values MUST be tokens valid in taxonomy (categories or placeholders).
+
+5) Runtime source values (JSON)
+   - If provided, ValueExpr.kind == "source_value" may be resolved.
+   - If not provided, such writes remain symbolic and MUST include a missing reason.
+
+Outputs (normative)
+-------------------
+Per profile pair (S,T), emit:
+
+A) Execution Planning execution plan artifact
+   - File: execution-planning.<S>.<T>.json
+   - version MUST be "ExecutionPlanning-1.1"
+   - Contains:
+     - runtimeContext (echo)
+     - plans[] (one per CONTEXTUAL_TRANSFORM component)
+     - writeOperations[] (flattened + dedup)
+     - conflicts[] (write conflicts)
+     - unresolved[] (contextual components not covered by applicable rules)
+     - summary (counts)
+
+B) Execution Planning validation artifact
+   - File: execution-planning-validation.<S>.<T>.json
+   - version MUST be "ExecutionPlanningValidation-1.1"
+   - Contains deterministic checks and booleans.
+
+Core Definitions
+----------------
+Let:
+- MB = mapping bundles
+- TT = transformation table
+- RC = runtimeContext (source tuple + target tuple)
+- TAX = taxonomy (axis keys + hierarchy + placeholder tokens)
+
+Tuple semantics:
+- Rule applicability MUST use the same taxonomy-aware compatibility as EC:
+  - wildcard token "*" matches any token
+  - placeholder token (e.g., "GE.") matches any token on that axis
+  - ancestor tokens match descendant tokens per TAX hierarchy
+  - if intersection is empty on any required axis, the rule is not applicable
+
+Execution Rules (per contextual bundle)
+---------------------------------------
+For each mapping bundle b in MB where b.decision == "CONTEXTUAL_TRANSFORM":
+
+R1 — Candidate rules
+- candidateRules(b) = [ r in TT.rules | r.componentId == b.componentId ]
+- candidateRuleIds = [r.ruleId for r in candidateRules(b)]
+- If candidateRules(b) is empty -> add entry to unresolved[] with reason "no_rules_for_component".
+
+R2 — Axes used for applicability (deterministic)
+- axesUsed(b) = b.relevantAxes (KCD(X) from mapping)
+- A rule r is eligible only if set(r.relevantAxes) == set(axesUsed(b)).
+  - If not, r is not applicable for b (do not treat as error; treat as non-applicable).
+
+R3 — Rule applicability (context guard)
+A rule r is applicable to bundle b iff all conditions hold:
+- For each axis a in axesUsed(b):
+    - ruleSourceToken = r.when.source[a] if present else TAX.placeholders[a]
+    - ruleTargetToken = r.when.target[a] if present else TAX.placeholders[a]
+    - T_intersect( {RC.source[a]}, {ruleSourceToken} ) is non-empty
+    - T_intersect( {RC.target[a]}, {ruleTargetToken} ) is non-empty
+  using Mission-EC tuple/token intersection semantics.
+
+R4 — Rule applicability (compatibility with EC evidence)
+A rule r is applicable to b only if it is not contradicted by b’s EC evidence on relevant axes:
+- Let ECs_rel = project(b.EC_source, axesUsed(b))
+- Let ECt_rel = project(b.EC_target, axesUsed(b))
+- Let rS_rel = project( { r.when.source merged with placeholders }, axesUsed(b) )
+- Let rT_rel = project( { r.when.target merged with placeholders }, axesUsed(b) )
+- T_intersect(ECs_rel, rS_rel) is non-empty AND T_intersect(ECt_rel, rT_rel) is non-empty.
+
+R5 — Optional matchSource (value-dependent guards)
+If rule r contains matchSource:
+- Determine inputPath:
+    - If r.matchSource.sourcePath exists use it
+    - Else use b.mappingJson.source_path (normative Mission-Mapping shape)
+- If runtimeValues[inputPath] is missing -> rule is non-applicable
+- If matchSource.kind == "equals": runtimeValues[inputPath] must equal matchSource.value
+- If matchSource.kind == "in": runtimeValues[inputPath] must be in matchSource.values[]
+If matchSource is absent -> treated as "any".
+
+R6 — Deterministic winner selection
+Let applicableRules(b) be rules passing R2–R5.
+
+If applicableRules(b) is empty:
+- add entry to unresolved[] with reason "no_applicable_rule".
+
+Else select exactly one winner w deterministically:
+- Primary: highest specificity score on axesUsed(b), where specificity counts:
+    - fewer wildcard/placeholder axes in when.source+when.target is better
+- Secondary: greater taxonomy depth sum for specified non-placeholder tokens is better
+    - depth(token) = number of delimiter segments (e.g., "GE.EU.DE" => 3 if delimiter is ".")
+- Tertiary: higher priority integer wins (default 0)
+- Final tie-break: lexicographically smallest ruleId wins
+
+The engine MUST record in trace:
+- orderedRuleIds (after applying tie-break ordering)
+- winner ruleId
+
+R7 — Plan emission
+For winner w, emit plan entry:
+- componentId = b.componentId
+- decision = "CONTEXTUAL_TRANSFORM"
+- relevantAxes = b.relevantAxes
+- selectedRuleId = w.ruleId
+- writes = w.then.writes (verbatim)
+- constraints/tests/references = copied (if present)
+- trace includes: candidateRuleIds, applicableRuleIds, orderedRuleIds, winner
+
+R8 — Write operations (flattened)
+From each plan’s writes[], emit flattened writeOperations[] entries:
+- componentId, ruleId, targetPath, valueExpr (verbatim)
+- provenance references:
+    - include at least ruleId + componentId
+    - include b.mappingJson.provenance.references if present (pass-through)
+
+R9 — ValueExpr evaluation (optional; deterministic)
+Execution Planning may produce either symbolic or resolved write operations:
+- If runtimeValues are not provided:
+    - all source_value and lookup writes remain symbolic
+- If runtimeValues are provided:
+    - literal: value resolved
+    - source_value: resolve from runtimeValues[sourcePath]
+    - lookup: resolve input source_value then map using lookupMap/tableId
+If a write cannot be resolved due to missing runtime value:
+- status = "symbolic"
+- missingReason = "missing_runtime_value"
+
+R10 — Conflict detection (no partial output on fatal conflicts)
+A conflict exists if two resolved write operations write the same targetPath with different values.
+If conflict detected:
+- emit error envelope only:
+  { "error":"ExecutionPlanning", "reason":"conflicting_writes", "details":{...} }
+- do not emit partial execution-planning or execution-planning-validation.
+
+Validation
+----------
+V1 Contextual-only:
+- No plan entry may be produced for non-contextual decisions.
+
+V2 Deterministic single winner:
+- For each componentId, at most one selectedRuleId exists.
+
+V3 Rule axes alignment:
+- selected rule’s relevantAxes set MUST equal bundle’s relevantAxes set.
+
+V4 Applicability evidence:
+- selected rule must be applicable under runtimeContext (R3) and EC compatibility (R4).
+
+V5 Stable output ordering:
+- Plans appear in the same order as bundles in mapping.mra.* after contextual filtering.
+- Write operations follow plan order, then writes[] order.
+
+Validation output booleans (execution-planning-validation):
+- contextualOnly = true|false
+- singleWinnerPerComponent = true|false
+- noConflictingWrites = true|false
+- allContextualComponentsHaveRules = true|false
+- deterministicTieBreakStable = true|false
+
+Error Handling
+--------------
+On fatal errors (schema invalid, conflicting writes, missing taxonomy keys, etc.):
+- emit only the error envelope; do not emit partial outputs.
+
+Uniform error envelope:
+{
+  "error": "ExecutionPlanning",
+  "reason": "<string>",
+  "details": { ... }
+}
+
+Non-goals
+---------
+- Not executing SEAMLESS mappings.
+- Not inferring transformations automatically.
+- Not executing arbitrary scripts.
+- Not generating target documents; only plans and normalized write operations.
+- Not recomputing EC or mapping decisions.
+
+Determinism Requirements
+------------------------
+Given identical inputs:
+- mapping.mra.<S>.<T>.json
+- taxonomy
+- TransformTable
+- runtimeContext (+ runtimeValues if provided)
+
+the engine MUST produce identical outputs byte-for-byte after canonical JSON serialization,
+including identical winner selection and output ordering.

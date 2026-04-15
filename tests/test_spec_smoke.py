@@ -17,6 +17,8 @@ def test_spec_files_exist_and_nonempty() -> None:
         SPEC_DIR / "Mission-EC-2.0.txt",
         SPEC_DIR / "Mission-Mapping-2.0.txt",
         SPEC_DIR / "Mission-Execution-Protocol-2.0.txt",
+        SPEC_DIR / "Mission-ExecutionPlanning-1.0.txt",
+        SPEC_DIR / "TransformTable-1.0.schema.json",
     ]
     for path in required:
         assert path.exists(), f"Missing spec file: {path}"
@@ -73,4 +75,3 @@ def test_execution_protocol_has_precedence_and_phase_order() -> None:
         "Step 4",
     ]:
         assert required in content, f"Expected execution protocol marker missing: {required}"
-
