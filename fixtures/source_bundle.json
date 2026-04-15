@@ -1,50 +1,62 @@
 {
-  "version": "EC-Input-DespatchExample.source",
+  "version": "EC-Input-1.1",
   "meta": {
-    "id": "despatch-source-example",
-    "createdAt": "2026-03-02T00:00:00Z",
-    "author": "OpenAI",
-    "description": "Source-side EC input for DespatchAdvice example with DE/EDI/Ambient context.",
-    "source": "Synthetic app-testing example"
+    "id": "581059c3-e2ae-4b44-ad6a-ad95fe512b0f",
+    "createdAt": "2025-12-01T00:00:00Z",
+    "author": "EC-Fixture-Generator",
+    "description": "Invoice-focused EC input (medium complexity) for GE/IND/BP/TAX/CT dials; includes DE and NL scenarios, defaults, duplicates, and missing-key fills. [ExampleA: align PaymentTerms CT to PT30; TaxExclusiveTotal TAX->S20]",
+    "source": "Scenario: UBL Invoice subset (Invoice/Lines/TaxTotal/LegalMonetaryTotal/PaymentTerms)",
+    "notes": "Wildcard is represented as <Any> per template (e.g., IND.<Any>). Some tuples intentionally omit CT to test default fill (CT.PT30). Duplicate tuples included to test deduplication. Added iucs, mra, and mappingPairs sections per request; iucs seeds are stored normalized to taxonomy category paths. MRA added/updated (shared for source and target)."
   },
   "taxonomy": {
     "keys": [
       "GE",
+      "IND",
       "BP",
-      "CHN",
-      "TEMP"
+      "TAX",
+      "CT"
     ],
     "placeholders": {
       "GE": "GE.<Any>",
+      "IND": "IND.<Any>",
       "BP": "BP.<Any>",
-      "CHN": "CHN.<Any>",
-      "TEMP": "TEMP.<Any>"
+      "TAX": "TAX.<Any>",
+      "CT": "CT.<Any>"
     },
     "categories": {
       "GE": [
         "GE",
         "GE.EU",
         "GE.EU.DE",
+        "GE.EU.FR",
         "GE.EU.NL",
-        "GE.EU.FR"
+        "GE.EU.ES",
+        "GE.EU.IT"
+      ],
+      "IND": [
+        "IND",
+        "IND.Manufacturing",
+        "IND.Services"
       ],
       "BP": [
         "BP",
-        "BP.DespatchAdvice(351)"
+        "BP.Invoice(380)"
       ],
-      "CHN": [
-        "CHN",
-        "CHN.EDI",
-        "CHN.API"
+      "TAX": [
+        "TAX",
+        "TAX.S20",
+        "TAX.S19",
+        "TAX.AA7",
+        "TAX.AE0"
       ],
-      "TEMP": [
-        "TEMP",
-        "TEMP.Ambient",
-        "TEMP.Cold"
+      "CT": [
+        "CT",
+        "CT.PT30",
+        "CT.PT14"
       ]
     },
     "defaults": {
-      "TEMP": "TEMP.Ambient"
+      "CT": "CT.PT30"
     },
     "rules": {
       "caseSensitive": true,
@@ -54,13 +66,13 @@
       "wildcardLiteral": "<Any>",
       "maxDepth": 3
     },
-    "notes": "Policy is applied only on GE/BP/CHN; TEMP is handled via defaults and propagation."
+    "notes": "EU is modeled as a GE category (GE.EU.*). Policy is applied only on GE/BP/TAX; IND and CT are handled via defaults and propagation."
   },
   "policy": {
     "policyKeys": [
       "GE",
       "BP",
-      "CHN"
+      "TAX"
     ],
     "rules": {
       "matchingMode": "equal-or-descendant",
@@ -68,148 +80,235 @@
       "missingKeyFallback": "taxonomy.defaults",
       "unknownCategoryBehavior": "error"
     },
-    "notes": "Source legal witness set: DE DespatchAdvice over EDI.",
+    "notes": "Four legal tuples/triples for Invoice(380): DE standard (S20), DE other (S19), DE reduced (AA7), NL reverse charge (AE0).",
     "legalTuples": [
       {
         "GE": "GE.EU.DE",
-        "BP": "BP.DespatchAdvice(351)",
-        "CHN": "CHN.EDI"
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.S20"
+      },
+      {
+        "GE": "GE.EU.DE",
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.S19"
+      },
+      {
+        "GE": "GE.EU.DE",
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.AA7"
+      },
+      {
+        "GE": "GE.EU.NL",
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.AE0"
       }
     ]
   },
   "componentGraph": {
-    "rootABIE": "DespatchAdvice_ABIE",
-    "businessProcess": "DespatchAdvice(351)",
+    "rootABIE": "Invoice_ABIE",
+    "businessProcess": "Invoice(380)",
     "abies": [
       {
-        "id": "DespatchAdvice_ABIE",
-        "name": "DespatchAdvice",
+        "id": "Invoice_ABIE",
+        "name": "Invoice",
         "childrenBBIE": [
-          "DespatchAdviceID_BBIE",
-          "IssueDate_BBIE"
+          "InvoiceID_BBIE",
+          "IssueDate_BBIE",
+          "DocumentCurrency_BBIE"
         ],
         "childrenASBIE": [
-          "DespatchAdvice_to_Shipment_ASBIE",
-          "DespatchAdvice_to_Consignee_ASBIE"
+          "Invoice_to_InvoiceLine_ASBIE",
+          "Invoice_to_TaxTotal_ASBIE",
+          "Invoice_to_LegalMonetaryTotal_ASBIE",
+          "Invoice_to_PaymentTerms_ASBIE"
         ],
-        "context": "Header"
+        "context": "Header",
+        "notes": "Root business information entity (ABIE)"
       },
       {
-        "id": "Shipment_ABIE",
-        "name": "Shipment",
+        "id": "InvoiceLine_ABIE",
+        "name": "InvoiceLine",
         "childrenBBIE": [
-          "GrossWeight_BBIE",
-          "HandlingCode_BBIE"
-        ],
-        "childrenASBIE": [
-          "Shipment_to_TransportEvent_ASBIE"
-        ],
-        "context": "Shipment"
-      },
-      {
-        "id": "TransportEvent_ABIE",
-        "name": "TransportEvent",
-        "childrenBBIE": [
-          "EstimatedArrivalDate_BBIE",
-          "TemperatureRequirement_BBIE"
+          "InvoicedQuantity_BBIE",
+          "PriceAmount_BBIE",
+          "LineExtensionAmount_BBIE"
         ],
         "childrenASBIE": [],
-        "context": "Transport"
+        "context": "Lines"
       },
       {
-        "id": "Consignee_ABIE",
-        "name": "Consignee",
+        "id": "TaxTotal_ABIE",
+        "name": "TaxTotal",
         "childrenBBIE": [
-          "ConsigneeName_BBIE",
-          "ConsigneeCountry_BBIE"
+          "TaxableAmount_BBIE",
+          "TaxAmount_BBIE",
+          "TaxCategory_BBIE"
         ],
         "childrenASBIE": [],
-        "context": "Party"
+        "context": "Tax"
+      },
+      {
+        "id": "LegalMonetaryTotal_ABIE",
+        "name": "LegalMonetaryTotal",
+        "childrenBBIE": [
+          "LineExtensionTotal_BBIE",
+          "TaxExclusiveTotal_BBIE",
+          "TaxInclusiveTotal_BBIE",
+          "PayableTotal_BBIE"
+        ],
+        "childrenASBIE": [],
+        "context": "Totals"
+      },
+      {
+        "id": "PaymentTerms_ABIE",
+        "name": "PaymentTerms",
+        "childrenBBIE": [
+          "PaymentDueDate_BBIE"
+        ],
+        "childrenASBIE": [],
+        "context": "Payment"
       }
     ],
     "bbies": [
       {
-        "id": "DespatchAdviceID_BBIE",
-        "ownerABIE": "DespatchAdvice_ABIE",
-        "name": "DespatchAdviceIdentifier",
-        "dataType": "Text"
+        "id": "InvoiceID_BBIE",
+        "ownerABIE": "Invoice_ABIE",
+        "name": "InvoiceIdentifier",
+        "dataType": "Text",
+        "codeList": null,
+        "description": "Invoice number / document identifier"
       },
       {
         "id": "IssueDate_BBIE",
-        "ownerABIE": "DespatchAdvice_ABIE",
+        "ownerABIE": "Invoice_ABIE",
         "name": "IssueDate",
-        "dataType": "Date"
+        "dataType": "Date",
+        "description": "Invoice issue date"
       },
       {
-        "id": "GrossWeight_BBIE",
-        "ownerABIE": "Shipment_ABIE",
-        "name": "GrossWeight",
+        "id": "DocumentCurrency_BBIE",
+        "ownerABIE": "Invoice_ABIE",
+        "name": "DocumentCurrencyCode",
+        "dataType": "Code",
+        "codeList": "CL.ISO4217",
+        "description": "Invoice currency code"
+      },
+      {
+        "id": "InvoicedQuantity_BBIE",
+        "ownerABIE": "InvoiceLine_ABIE",
+        "name": "InvoicedQuantity",
+        "dataType": "Number",
+        "description": "Quantity on the line"
+      },
+      {
+        "id": "PriceAmount_BBIE",
+        "ownerABIE": "InvoiceLine_ABIE",
+        "name": "PriceAmount",
+        "dataType": "Number",
+        "description": "Unit price amount"
+      },
+      {
+        "id": "LineExtensionAmount_BBIE",
+        "ownerABIE": "InvoiceLine_ABIE",
+        "name": "LineExtensionAmount",
+        "dataType": "Number",
+        "description": "Line net amount excluding tax"
+      },
+      {
+        "id": "TaxableAmount_BBIE",
+        "ownerABIE": "TaxTotal_ABIE",
+        "name": "TaxableAmount",
         "dataType": "Number"
       },
       {
-        "id": "HandlingCode_BBIE",
-        "ownerABIE": "Shipment_ABIE",
-        "name": "HandlingCode",
-        "dataType": "Code"
+        "id": "TaxAmount_BBIE",
+        "ownerABIE": "TaxTotal_ABIE",
+        "name": "TaxAmount",
+        "dataType": "Number"
       },
       {
-        "id": "EstimatedArrivalDate_BBIE",
-        "ownerABIE": "TransportEvent_ABIE",
-        "name": "EstimatedArrivalDate",
-        "dataType": "Date"
+        "id": "TaxCategory_BBIE",
+        "ownerABIE": "TaxTotal_ABIE",
+        "name": "TaxCategoryCode",
+        "dataType": "Code",
+        "codeList": "CL.VATCategory"
       },
       {
-        "id": "TemperatureRequirement_BBIE",
-        "ownerABIE": "TransportEvent_ABIE",
-        "name": "TemperatureRequirement",
-        "dataType": "Code"
+        "id": "LineExtensionTotal_BBIE",
+        "ownerABIE": "LegalMonetaryTotal_ABIE",
+        "name": "LineExtensionTotal",
+        "dataType": "Number"
       },
       {
-        "id": "ConsigneeName_BBIE",
-        "ownerABIE": "Consignee_ABIE",
-        "name": "ConsigneeName",
-        "dataType": "Text"
+        "id": "TaxExclusiveTotal_BBIE",
+        "ownerABIE": "LegalMonetaryTotal_ABIE",
+        "name": "TaxExclusiveTotal",
+        "dataType": "Number"
       },
       {
-        "id": "ConsigneeCountry_BBIE",
-        "ownerABIE": "Consignee_ABIE",
-        "name": "ConsigneeCountry",
-        "dataType": "Code"
+        "id": "TaxInclusiveTotal_BBIE",
+        "ownerABIE": "LegalMonetaryTotal_ABIE",
+        "name": "TaxInclusiveTotal",
+        "dataType": "Number"
+      },
+      {
+        "id": "PayableTotal_BBIE",
+        "ownerABIE": "LegalMonetaryTotal_ABIE",
+        "name": "PayableTotal",
+        "dataType": "Number"
+      },
+      {
+        "id": "PaymentDueDate_BBIE",
+        "ownerABIE": "PaymentTerms_ABIE",
+        "name": "PaymentDueDate",
+        "dataType": "Date",
+        "description": "Due date for payment"
       }
     ],
     "asbies": [
       {
-        "id": "DespatchAdvice_to_Shipment_ASBIE",
-        "name": "Shipment",
-        "sourceABIE": "DespatchAdvice_ABIE",
-        "targetABIE": "Shipment_ABIE",
+        "id": "Invoice_to_InvoiceLine_ASBIE",
+        "name": "InvoiceLine",
+        "sourceABIE": "Invoice_ABIE",
+        "targetABIE": "InvoiceLine_ABIE",
         "cardinality": {
-          "onSource": "0..1",
+          "onSource": "0..*",
           "onTarget": "1..1"
         },
-        "description": "DespatchAdvice \u2192 Shipment"
+        "description": "Invoice \u2192 InvoiceLine"
       },
       {
-        "id": "Shipment_to_TransportEvent_ASBIE",
-        "name": "TransportEvent",
-        "sourceABIE": "Shipment_ABIE",
-        "targetABIE": "TransportEvent_ABIE",
+        "id": "Invoice_to_TaxTotal_ASBIE",
+        "name": "TaxTotal",
+        "sourceABIE": "Invoice_ABIE",
+        "targetABIE": "TaxTotal_ABIE",
         "cardinality": {
-          "onSource": "0..1",
+          "onSource": "0..*",
           "onTarget": "1..1"
         },
-        "description": "Shipment \u2192 TransportEvent"
+        "description": "Invoice \u2192 TaxTotal"
       },
       {
-        "id": "DespatchAdvice_to_Consignee_ASBIE",
-        "name": "Consignee",
-        "sourceABIE": "DespatchAdvice_ABIE",
-        "targetABIE": "Consignee_ABIE",
+        "id": "Invoice_to_LegalMonetaryTotal_ASBIE",
+        "name": "LegalMonetaryTotal",
+        "sourceABIE": "Invoice_ABIE",
+        "targetABIE": "LegalMonetaryTotal_ABIE",
         "cardinality": {
           "onSource": "0..1",
           "onTarget": "1..1"
         },
-        "description": "DespatchAdvice \u2192 Consignee"
+        "description": "Invoice \u2192 LegalMonetaryTotal (totals)"
+      },
+      {
+        "id": "Invoice_to_PaymentTerms_ASBIE",
+        "name": "PaymentTerms",
+        "sourceABIE": "Invoice_ABIE",
+        "targetABIE": "PaymentTerms_ABIE",
+        "cardinality": {
+          "onSource": "0..*",
+          "onTarget": "1..1"
+        },
+        "description": "Invoice \u2192 PaymentTerms"
       }
     ],
     "rules": {
@@ -230,19 +329,145 @@
   },
   "assignedBusinessContext": [
     {
-      "componentId": "DespatchAdviceID_BBIE",
+      "componentId": "Invoice_to_InvoiceLine_ASBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S19",
+          "CT": "CT.<Any>"
         },
         {
           "GE": "GE.EU.NL",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.API",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
+        }
+      ],
+      "rules": {
+        "combineMode": "union",
+        "duplicates": "deduplicate",
+        "missingKeysAllowed": true
+      }
+    },
+    {
+      "componentId": "Invoice_to_TaxTotal_ASBIE",
+      "tuples": [
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
+        }
+      ],
+      "rules": {
+        "combineMode": "union",
+        "duplicates": "deduplicate",
+        "missingKeysAllowed": true
+      }
+    },
+    {
+      "componentId": "Invoice_to_LegalMonetaryTotal_ASBIE",
+      "tuples": [
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AA7",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
+        }
+      ],
+      "rules": {
+        "combineMode": "union",
+        "duplicates": "deduplicate",
+        "missingKeysAllowed": true
+      }
+    },
+    {
+      "componentId": "Invoice_to_PaymentTerms_ASBIE",
+      "tuples": [
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.PT30"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S19",
+          "CT": "CT.PT30"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.PT30"
+        }
+      ],
+      "rules": {
+        "combineMode": "union",
+        "duplicates": "deduplicate",
+        "missingKeysAllowed": true
+      }
+    },
+    {
+      "componentId": "InvoiceID_BBIE",
+      "tuples": [
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.Manufacturing",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.PT30"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.Manufacturing",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S19",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.Services",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -256,9 +481,24 @@
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.Manufacturing",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.PT30"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.Manufacturing",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.PT30"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AA7",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -268,19 +508,21 @@
       }
     },
     {
-      "componentId": "DespatchAdvice_to_Shipment_ASBIE",
+      "componentId": "DocumentCurrency_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.Ambient"
+          "IND": "IND.Manufacturing",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.PT30"
         },
         {
           "GE": "GE.EU.NL",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.API",
-          "TEMP": "TEMP.Cold"
+          "IND": "IND.Services",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -290,13 +532,28 @@
       }
     },
     {
-      "componentId": "GrossWeight_BBIE",
+      "componentId": "InvoicedQuantity_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S19",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -306,13 +563,28 @@
       }
     },
     {
-      "componentId": "HandlingCode_BBIE",
+      "componentId": "PriceAmount_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AA7",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.Services",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -322,13 +594,28 @@
       }
     },
     {
-      "componentId": "Shipment_to_TransportEvent_ASBIE",
+      "componentId": "LineExtensionAmount_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.Ambient"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S19",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -338,13 +625,14 @@
       }
     },
     {
-      "componentId": "EstimatedArrivalDate_BBIE",
+      "componentId": "TaxCategory_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.Ambient"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -354,13 +642,21 @@
       }
     },
     {
-      "componentId": "TemperatureRequirement_BBIE",
+      "componentId": "TaxableAmount_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.Ambient"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -370,13 +666,21 @@
       }
     },
     {
-      "componentId": "DespatchAdvice_to_Consignee_ASBIE",
+      "componentId": "TaxAmount_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -386,13 +690,14 @@
       }
     },
     {
-      "componentId": "ConsigneeName_BBIE",
+      "componentId": "LineExtensionTotal_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
         }
       ],
       "rules": {
@@ -402,13 +707,72 @@
       }
     },
     {
-      "componentId": "ConsigneeCountry_BBIE",
+      "componentId": "TaxExclusiveTotal_BBIE",
       "tuples": [
         {
           "GE": "GE.EU.DE",
-          "BP": "BP.DespatchAdvice(351)",
-          "CHN": "CHN.EDI",
-          "TEMP": "TEMP.<Any>"
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        }
+      ],
+      "rules": {
+        "combineMode": "union",
+        "duplicates": "deduplicate",
+        "missingKeysAllowed": true
+      }
+    },
+    {
+      "componentId": "TaxInclusiveTotal_BBIE",
+      "tuples": [
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        }
+      ],
+      "rules": {
+        "combineMode": "union",
+        "duplicates": "deduplicate",
+        "missingKeysAllowed": true
+      }
+    },
+    {
+      "componentId": "PayableTotal_BBIE",
+      "tuples": [
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.<Any>"
+        }
+      ],
+      "rules": {
+        "combineMode": "union",
+        "duplicates": "deduplicate",
+        "missingKeysAllowed": true
+      }
+    },
+    {
+      "componentId": "PaymentDueDate_BBIE",
+      "tuples": [
+        {
+          "GE": "GE.EU.DE",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20",
+          "CT": "CT.PT30"
+        },
+        {
+          "GE": "GE.EU.NL",
+          "IND": "IND.<Any>",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0",
+          "CT": "CT.PT30"
         }
       ],
       "rules": {

@@ -1,13 +1,14 @@
 [
   {
     "id": "Profile.IUC_target",
-    "description": "Target IUC seed: GE=GE.EU.NL, BP=BP.DespatchAdvice(351), CHN=CHN.API, TEMP=TEMP.Cold",
+    "description": "Target IUC seed: GE=GE.EU.NL, IND=IND.Services, BP=BP.Invoice(380), TAX=TAX.AE0, CT=CT.PT30",
     "tuples": [
       {
         "GE": "GE.EU.NL",
-        "BP": "BP.DespatchAdvice(351)",
-        "CHN": "CHN.API",
-        "TEMP": "TEMP.Cold"
+        "IND": "IND.Services",
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.AE0",
+        "CT": "CT.PT30"
       }
     ],
     "evaluationRules": {
@@ -15,8 +16,8 @@
       "independent": true
     },
     "trace": {
-      "computedBy": "EC-Algorithm-2.1",
-      "timestamp": "2026-03-02T00:00:00Z"
+      "computedBy": "EC-Algorithm-2.0",
+      "timestamp": "2026-02-17T00:00:00Z"
     }
   }
 ]

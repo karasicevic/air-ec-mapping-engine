@@ -1,0 +1,679 @@
+{
+  "conflicts": [],
+  "plans": [
+    {
+      "componentId": "LegalMonetaryTotal_ABIE",
+      "constraints": [
+        {
+          "rule": "BR-CO-13",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-CO-15",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-CO-16",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-AE-09",
+          "standard": "EN16931 (UBL binding)"
+        }
+      ],
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "references": [
+        {
+          "id": "Legal monetary total package for reverse charge",
+          "standard": "Peppol BIS Billing 3.0"
+        }
+      ],
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "selectedRuleId": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package",
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package.test1",
+          "message": "Legal monetary totals are reconciled for zero-VAT target scenario",
+          "type": "assert"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package.test2",
+          "message": "Applicable only for DE S20 to NL AE0 contextual transform",
+          "type": "assert"
+        }
+      ],
+      "trace": {
+        "applicableRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package"
+        ],
+        "candidateRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package"
+        ],
+        "orderedRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package"
+        ],
+        "winner": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package"
+      },
+      "writes": [
+        {
+          "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount",
+          "value": {
+            "kind": "source_value",
+            "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+          "value": {
+            "kind": "source_value",
+            "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+          "value": {
+            "kind": "source_value",
+            "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+          }
+        }
+      ]
+    },
+    {
+      "componentId": "PayableTotal_BBIE",
+      "constraints": [
+        {
+          "rule": "BR-CO-16",
+          "standard": "EN16931 (UBL binding)"
+        }
+      ],
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "references": [
+        {
+          "id": "Current example does not model paid amount or rounding amount; payable derived from net total",
+          "standard": "Prototype assumption"
+        }
+      ],
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "selectedRuleId": "TAX_DE_to_NL_reverse_charge_payable_total",
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_payable_total.test1",
+          "message": "Prototype assumption: no paid amount or rounding amount; payable equals tax-exclusive total under reverse charge",
+          "type": "assert"
+        }
+      ],
+      "trace": {
+        "applicableRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_payable_total"
+        ],
+        "candidateRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_payable_total"
+        ],
+        "orderedRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_payable_total"
+        ],
+        "winner": "TAX_DE_to_NL_reverse_charge_payable_total"
+      },
+      "writes": [
+        {
+          "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+          "value": {
+            "kind": "source_value",
+            "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+          }
+        }
+      ]
+    },
+    {
+      "componentId": "TaxAmount_BBIE",
+      "constraints": [
+        {
+          "rule": "BR-AE-09",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-DEC-20",
+          "standard": "EN16931 (UBL binding)"
+        }
+      ],
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "references": [
+        {
+          "id": "Reverse-charge VAT amount zero",
+          "standard": "Peppol BIS Billing 3.0"
+        }
+      ],
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "selectedRuleId": "TAX_DE_to_NL_reverse_charge_tax_amount_zero",
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_amount_zero.test1",
+          "message": "Reverse-charge VAT amount must be 0",
+          "type": "assert"
+        }
+      ],
+      "trace": {
+        "applicableRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_amount_zero"
+        ],
+        "candidateRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_amount_zero"
+        ],
+        "orderedRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_amount_zero"
+        ],
+        "winner": "TAX_DE_to_NL_reverse_charge_tax_amount_zero"
+      },
+      "writes": [
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
+          "value": {
+            "kind": "literal",
+            "value": 0
+          }
+        }
+      ]
+    },
+    {
+      "componentId": "TaxCategory_BBIE",
+      "constraints": [
+        {
+          "rule": "BR-AE-01",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-AE-10",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "PEPPOL-EN16931-P0107",
+          "standard": "Peppol BIS Billing 3.0"
+        }
+      ],
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "references": [
+        {
+          "id": "Reverse charge category/value mapping for AE",
+          "standard": "Peppol BIS Billing 3.0"
+        },
+        {
+          "id": "VATEX-EU-AE only with tax category AE",
+          "standard": "VATEX code list"
+        }
+      ],
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "selectedRuleId": "TAX_DE_to_NL_reverse_charge_tax_category",
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_category.test1",
+          "message": "AE0 target regime requires AE tax category and VATEX-EU-AE reason code",
+          "type": "assert"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_category.test2",
+          "message": "TaxCategory writes must target VAT breakdown TaxCategory fields",
+          "type": "assert"
+        }
+      ],
+      "trace": {
+        "applicableRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_category"
+        ],
+        "candidateRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_category"
+        ],
+        "orderedRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_category"
+        ],
+        "winner": "TAX_DE_to_NL_reverse_charge_tax_category"
+      },
+      "writes": [
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
+          "value": {
+            "input": {
+              "kind": "literal",
+              "value": "TAX.AE0"
+            },
+            "kind": "lookup",
+            "onMissing": {
+              "action": "error"
+            },
+            "tableId": "TaxRegimeToPeppolTaxCategory"
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:Percent",
+          "value": {
+            "input": {
+              "kind": "literal",
+              "value": "TAX.AE0"
+            },
+            "kind": "lookup",
+            "onMissing": {
+              "action": "error"
+            },
+            "tableId": "TaxRegimeToPercent"
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:TaxExemptionReasonCode",
+          "value": {
+            "input": {
+              "kind": "literal",
+              "value": "TAX.AE0"
+            },
+            "kind": "lookup",
+            "onMissing": {
+              "action": "error"
+            },
+            "tableId": "TaxRegimeToVatExemptionReason"
+          }
+        }
+      ]
+    },
+    {
+      "componentId": "TaxInclusiveTotal_BBIE",
+      "constraints": [
+        {
+          "rule": "BR-CO-15",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-AE-09",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-DEC-14",
+          "standard": "EN16931 (UBL binding)"
+        }
+      ],
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "references": [
+        {
+          "id": "Tax-inclusive amount under reverse charge",
+          "standard": "Peppol BIS Billing 3.0"
+        }
+      ],
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "selectedRuleId": "TAX_DE_to_NL_reverse_charge_tax_inclusive_total",
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_inclusive_total.test1",
+          "message": "For reverse charge, total with VAT equals total without VAT because VAT amount is zero",
+          "type": "assert"
+        }
+      ],
+      "trace": {
+        "applicableRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_inclusive_total"
+        ],
+        "candidateRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_inclusive_total"
+        ],
+        "orderedRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_inclusive_total"
+        ],
+        "winner": "TAX_DE_to_NL_reverse_charge_tax_inclusive_total"
+      },
+      "writes": [
+        {
+          "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+          "value": {
+            "kind": "source_value",
+            "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+          }
+        }
+      ]
+    },
+    {
+      "componentId": "TaxTotal_ABIE",
+      "constraints": [
+        {
+          "rule": "BR-AE-01",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-AE-08",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-AE-09",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-AE-10",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "PEPPOL-EN16931-P0107",
+          "standard": "Peppol BIS Billing 3.0"
+        }
+      ],
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "references": [
+        {
+          "id": "Reverse-charge tax package at TaxTotal level",
+          "standard": "Peppol BIS Billing 3.0"
+        }
+      ],
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "selectedRuleId": "TAX_DE_to_NL_reverse_charge_tax_total_package",
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_total_package.test1",
+          "message": "Exactly one reverse-charge VAT breakdown is emitted",
+          "type": "assert"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_total_package.test2",
+          "message": "Tax total and subtotal tax amounts are zero",
+          "type": "assert"
+        }
+      ],
+      "trace": {
+        "applicableRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_total_package"
+        ],
+        "candidateRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_total_package"
+        ],
+        "orderedRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_tax_total_package"
+        ],
+        "winner": "TAX_DE_to_NL_reverse_charge_tax_total_package"
+      },
+      "writes": [
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cbc:TaxAmount",
+          "value": {
+            "kind": "literal",
+            "value": 0
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
+          "value": {
+            "kind": "source_value",
+            "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount"
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
+          "value": {
+            "kind": "literal",
+            "value": 0
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
+          "value": {
+            "input": {
+              "kind": "literal",
+              "value": "TAX.AE0"
+            },
+            "kind": "lookup",
+            "onMissing": {
+              "action": "error"
+            },
+            "tableId": "TaxRegimeToPeppolTaxCategory"
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:Percent",
+          "value": {
+            "input": {
+              "kind": "literal",
+              "value": "TAX.AE0"
+            },
+            "kind": "lookup",
+            "onMissing": {
+              "action": "error"
+            },
+            "tableId": "TaxRegimeToPercent"
+          }
+        },
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:TaxExemptionReasonCode",
+          "value": {
+            "input": {
+              "kind": "literal",
+              "value": "TAX.AE0"
+            },
+            "kind": "lookup",
+            "onMissing": {
+              "action": "error"
+            },
+            "tableId": "TaxRegimeToVatExemptionReason"
+          }
+        }
+      ]
+    },
+    {
+      "componentId": "TaxableAmount_BBIE",
+      "constraints": [
+        {
+          "rule": "BR-AE-08",
+          "standard": "EN16931 (UBL binding)"
+        },
+        {
+          "rule": "BR-DEC-19",
+          "standard": "EN16931 (UBL binding)"
+        }
+      ],
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "references": [
+        {
+          "id": "Reverse-charge VAT breakdown taxable amount",
+          "standard": "Peppol BIS Billing 3.0"
+        }
+      ],
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "selectedRuleId": "TAX_DE_to_NL_reverse_charge_taxable_amount",
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_taxable_amount.test1",
+          "message": "For reverse charge, taxable amount is preserved as the VAT base",
+          "type": "assert"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_taxable_amount.test2",
+          "message": "Validate taxable amount against source breakdown or recomputation at runtime",
+          "type": "assert"
+        }
+      ],
+      "trace": {
+        "applicableRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_taxable_amount"
+        ],
+        "candidateRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_taxable_amount"
+        ],
+        "orderedRuleIds": [
+          "TAX_DE_to_NL_reverse_charge_taxable_amount"
+        ],
+        "winner": "TAX_DE_to_NL_reverse_charge_taxable_amount"
+      },
+      "writes": [
+        {
+          "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
+          "value": {
+            "kind": "source_value",
+            "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount"
+          }
+        }
+      ]
+    }
+  ],
+  "runtimeContext": {
+    "source": {
+      "BP": "BP.Invoice(380)",
+      "CT": "CT.PT30",
+      "GE": "GE.EU.DE",
+      "IND": "IND.Manufacturing",
+      "TAX": "TAX.S20"
+    },
+    "target": {
+      "BP": "BP.Invoice(380)",
+      "CT": "CT.PT30",
+      "GE": "GE.EU.NL",
+      "IND": "IND.Services",
+      "TAX": "TAX.AE0"
+    }
+  },
+  "sourceProfileId": "Profile.IUC_source",
+  "summary": {
+    "conflictCount": 0,
+    "contextualMraCount": 7,
+    "resolvedPlanCount": 7,
+    "symbolicWriteCount": 4,
+    "uniqueWriteOperationCount": 9,
+    "unresolvedCount": 0
+  },
+  "targetProfileId": "Profile.IUC_target",
+  "unresolved": [],
+  "version": "ExecutionPlanning-1.1",
+  "writeOperations": [
+    {
+      "componentId": "LegalMonetaryTotal_ABIE",
+      "missingReason": "missing_runtime_value",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package",
+      "status": "symbolic",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount",
+      "valueExpr": {
+        "kind": "source_value",
+        "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+      }
+    },
+    {
+      "componentId": "LegalMonetaryTotal_ABIE",
+      "missingReason": "missing_runtime_value",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package",
+      "status": "symbolic",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+      "valueExpr": {
+        "kind": "source_value",
+        "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+      }
+    },
+    {
+      "componentId": "LegalMonetaryTotal_ABIE",
+      "missingReason": "missing_runtime_value",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package",
+      "status": "symbolic",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+      "valueExpr": {
+        "kind": "source_value",
+        "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+      }
+    },
+    {
+      "componentId": "TaxAmount_BBIE",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_amount_zero",
+      "status": "resolved",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
+      "value": 0,
+      "valueExpr": {
+        "kind": "literal",
+        "value": 0
+      }
+    },
+    {
+      "componentId": "TaxCategory_BBIE",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_category",
+      "status": "resolved",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
+      "value": "AE",
+      "valueExpr": {
+        "input": {
+          "kind": "literal",
+          "value": "TAX.AE0"
+        },
+        "kind": "lookup",
+        "onMissing": {
+          "action": "error"
+        },
+        "tableId": "TaxRegimeToPeppolTaxCategory"
+      }
+    },
+    {
+      "componentId": "TaxCategory_BBIE",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_category",
+      "status": "resolved",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:Percent",
+      "value": 0,
+      "valueExpr": {
+        "input": {
+          "kind": "literal",
+          "value": "TAX.AE0"
+        },
+        "kind": "lookup",
+        "onMissing": {
+          "action": "error"
+        },
+        "tableId": "TaxRegimeToPercent"
+      }
+    },
+    {
+      "componentId": "TaxCategory_BBIE",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_category",
+      "status": "resolved",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:TaxExemptionReasonCode",
+      "value": "VATEX-EU-AE",
+      "valueExpr": {
+        "input": {
+          "kind": "literal",
+          "value": "TAX.AE0"
+        },
+        "kind": "lookup",
+        "onMissing": {
+          "action": "error"
+        },
+        "tableId": "TaxRegimeToVatExemptionReason"
+      }
+    },
+    {
+      "componentId": "TaxTotal_ABIE",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_total_package",
+      "status": "resolved",
+      "targetPath": "/Invoice/cac:TaxTotal/cbc:TaxAmount",
+      "value": 0,
+      "valueExpr": {
+        "kind": "literal",
+        "value": 0
+      }
+    },
+    {
+      "componentId": "TaxTotal_ABIE",
+      "missingReason": "missing_runtime_value",
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_total_package",
+      "status": "symbolic",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
+      "valueExpr": {
+        "kind": "source_value",
+        "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount"
+      }
+    }
+  ]
+}

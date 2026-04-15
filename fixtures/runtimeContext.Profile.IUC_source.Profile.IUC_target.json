@@ -1,0 +1,16 @@
+{
+  "source": {
+    "GE": "GE.EU.DE",
+    "IND": "IND.Manufacturing",
+    "BP": "BP.Invoice(380)",
+    "TAX": "TAX.S20",
+    "CT": "CT.PT30"
+  },
+  "target": {
+    "GE": "GE.EU.NL",
+    "IND": "IND.Services",
+    "BP": "BP.Invoice(380)",
+    "TAX": "TAX.AE0",
+    "CT": "CT.PT30"
+  }
+}

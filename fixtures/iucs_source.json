@@ -1,13 +1,14 @@
 [
   {
     "id": "Profile.IUC_source",
-    "description": "Source IUC seed: GE=GE.EU.DE, BP=BP.DespatchAdvice(351), CHN=CHN.EDI, TEMP=TEMP.Ambient",
+    "description": "Source IUC seed: GE=GE.EU.DE, IND=IND.Manufacturing, BP=BP.Invoice(380), TAX=TAX.S20, CT=CT.PT30",
     "tuples": [
       {
         "GE": "GE.EU.DE",
-        "BP": "BP.DespatchAdvice(351)",
-        "CHN": "CHN.EDI",
-        "TEMP": "TEMP.Ambient"
+        "IND": "IND.Manufacturing",
+        "BP": "BP.Invoice(380)",
+        "TAX": "TAX.S20",
+        "CT": "CT.PT30"
       }
     ],
     "evaluationRules": {
@@ -15,8 +16,8 @@
       "independent": true
     },
     "trace": {
-      "computedBy": "EC-Algorithm-2.1",
-      "timestamp": "2026-03-02T00:00:00Z"
+      "computedBy": "EC-Algorithm-2.0",
+      "timestamp": "2026-02-17T00:00:00Z"
     }
   }
 ]

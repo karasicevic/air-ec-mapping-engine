@@ -1,0 +1,862 @@
+[
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "DocumentCurrency_BBIE",
+    "componentId": "DocumentCurrency_BBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "DocumentCurrency_BBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "DocumentCurrency_BBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.header.documentCurrency",
+      "targetPath": "/Invoice/cbc:DocumentCurrencyCode",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "InvoiceID_BBIE",
+    "componentId": "InvoiceID_BBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "InvoiceID_BBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "InvoiceID_BBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.header.invoiceId",
+      "targetPath": "/Invoice/cbc:ID",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "InvoiceLine_ABIE",
+    "componentId": "InvoiceLine_ABIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "InvoiceLine_ABIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "InvoiceLine_ABIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.lines[i]",
+      "targetPath": "/Invoice/cac:InvoiceLine[i+1]",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "Invoice_ABIE",
+    "componentId": "Invoice_ABIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "Invoice_ABIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "Invoice_ABIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice",
+      "targetPath": "/Invoice",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "Invoice_to_InvoiceLine_ASBIE",
+    "componentId": "Invoice_to_InvoiceLine_ASBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "Invoice_to_InvoiceLine_ASBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "Invoice_to_InvoiceLine_ASBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.lines",
+      "targetPath": "/Invoice/cac:InvoiceLine",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "Invoice_to_LegalMonetaryTotal_ASBIE",
+    "componentId": "Invoice_to_LegalMonetaryTotal_ASBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "Invoice_to_LegalMonetaryTotal_ASBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "Invoice_to_LegalMonetaryTotal_ASBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.legalMonetaryTotal",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "Invoice_to_TaxTotal_ASBIE",
+    "componentId": "Invoice_to_TaxTotal_ASBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "Invoice_to_TaxTotal_ASBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "Invoice_to_TaxTotal_ASBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.taxTotals",
+      "targetPath": "/Invoice/cac:TaxTotal",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "InvoicedQuantity_BBIE",
+    "componentId": "InvoicedQuantity_BBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "InvoicedQuantity_BBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "InvoicedQuantity_BBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.lines[i].invoicedQuantity",
+      "targetPath": "/Invoice/cac:InvoiceLine[i+1]/cbc:InvoicedQuantity",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "IssueDate_BBIE",
+    "componentId": "IssueDate_BBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "IssueDate_BBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "IssueDate_BBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.header.issueDate",
+      "targetPath": "/Invoice/cbc:IssueDate",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "LegalMonetaryTotal_ABIE",
+    "componentId": "LegalMonetaryTotal_ABIE",
+    "decision": "CONTEXTUAL_TRANSFORM",
+    "explanationJson": {
+      "componentId": "LegalMonetaryTotal_ABIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "tldr": "CONTEXTUAL_TRANSFORM based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "LegalMonetaryTotal_ABIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "sourcePath": "$.invoice.legalMonetaryTotal",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal",
+      "transform": "contextual_transform"
+    },
+    "relevantAxes": [
+      "BP",
+      "TAX"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "LineExtensionAmount_BBIE",
+    "componentId": "LineExtensionAmount_BBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "LineExtensionAmount_BBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "LineExtensionAmount_BBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.lines[i].lineExtensionAmount",
+      "targetPath": "/Invoice/cac:InvoiceLine[i+1]/cbc:LineExtensionAmount",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "LineExtensionTotal_BBIE",
+    "componentId": "LineExtensionTotal_BBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "LineExtensionTotal_BBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "LineExtensionTotal_BBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.legalMonetaryTotal.lineExtensionTotal",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:LineExtensionAmount",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "PayableTotal_BBIE",
+    "componentId": "PayableTotal_BBIE",
+    "decision": "CONTEXTUAL_TRANSFORM",
+    "explanationJson": {
+      "componentId": "PayableTotal_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "tldr": "CONTEXTUAL_TRANSFORM based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "PayableTotal_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "sourcePath": "$.invoice.legalMonetaryTotal.payableTotal",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+      "transform": "contextual_transform"
+    },
+    "relevantAxes": [
+      "BP",
+      "TAX"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [
+      {
+        "BP": "BP.Invoice(380)"
+      }
+    ],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "PriceAmount_BBIE",
+    "componentId": "PriceAmount_BBIE",
+    "decision": "SEAMLESS",
+    "explanationJson": {
+      "componentId": "PriceAmount_BBIE",
+      "decision": "SEAMLESS",
+      "relevantAxes": [
+        "BP"
+      ],
+      "tldr": "SEAMLESS based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "PriceAmount_BBIE",
+      "decision": "SEAMLESS",
+      "sourcePath": "$.invoice.lines[i].price.amount",
+      "targetPath": "/Invoice/cac:InvoiceLine[i+1]/cac:Price/cbc:PriceAmount",
+      "transform": "identity_or_direct"
+    },
+    "relevantAxes": [
+      "BP"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "TaxAmount_BBIE",
+    "componentId": "TaxAmount_BBIE",
+    "decision": "CONTEXTUAL_TRANSFORM",
+    "explanationJson": {
+      "componentId": "TaxAmount_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "tldr": "CONTEXTUAL_TRANSFORM based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "TaxAmount_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxAmount",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
+      "transform": "contextual_transform"
+    },
+    "relevantAxes": [
+      "BP",
+      "TAX"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "TaxCategory_BBIE",
+    "componentId": "TaxCategory_BBIE",
+    "decision": "CONTEXTUAL_TRANSFORM",
+    "explanationJson": {
+      "componentId": "TaxCategory_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "tldr": "CONTEXTUAL_TRANSFORM based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "TaxCategory_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxCategoryCode",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
+      "transform": "contextual_transform"
+    },
+    "relevantAxes": [
+      "BP",
+      "TAX"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "TaxInclusiveTotal_BBIE",
+    "componentId": "TaxInclusiveTotal_BBIE",
+    "decision": "CONTEXTUAL_TRANSFORM",
+    "explanationJson": {
+      "componentId": "TaxInclusiveTotal_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "tldr": "CONTEXTUAL_TRANSFORM based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "TaxInclusiveTotal_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "sourcePath": "$.invoice.legalMonetaryTotal.taxInclusiveTotal",
+      "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+      "transform": "contextual_transform"
+    },
+    "relevantAxes": [
+      "BP",
+      "TAX"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "TaxTotal_ABIE",
+    "componentId": "TaxTotal_ABIE",
+    "decision": "CONTEXTUAL_TRANSFORM",
+    "explanationJson": {
+      "componentId": "TaxTotal_ABIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "tldr": "CONTEXTUAL_TRANSFORM based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "TaxTotal_ABIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "sourcePath": "$.invoice.taxTotals[j]",
+      "targetPath": "/Invoice/cac:TaxTotal",
+      "transform": "contextual_transform"
+    },
+    "relevantAxes": [
+      "BP",
+      "TAX"
+    ]
+  },
+  {
+    "EC_common_on_KCD": [],
+    "EC_source": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.DE",
+        "IND": "IND.Manufacturing",
+        "TAX": "TAX.S20"
+      }
+    ],
+    "EC_target": [
+      {
+        "BP": "BP.Invoice(380)",
+        "CT": "CT.PT30",
+        "GE": "GE.EU.NL",
+        "IND": "IND.Services",
+        "TAX": "TAX.AE0"
+      }
+    ],
+    "anchor": "TaxableAmount_BBIE",
+    "componentId": "TaxableAmount_BBIE",
+    "decision": "CONTEXTUAL_TRANSFORM",
+    "explanationJson": {
+      "componentId": "TaxableAmount_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "tldr": "CONTEXTUAL_TRANSFORM based on KCD comparison"
+    },
+    "mappingJson": {
+      "componentId": "TaxableAmount_BBIE",
+      "decision": "CONTEXTUAL_TRANSFORM",
+      "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount",
+      "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
+      "transform": "contextual_transform"
+    },
+    "relevantAxes": [
+      "BP",
+      "TAX"
+    ]
+  }
+]

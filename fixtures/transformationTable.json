@@ -1,0 +1,1030 @@
+{
+  "version": "TransformTable-1.0",
+  "meta": {
+    "name": "transformationTable shared test fixture",
+    "description": "Shared TransformTable instance for invoice, order, and despatch testing examples. It is schema-conformant and retains the DE->NL AE0 reverse-charge rules.",
+    "createdAt": "2026-04-15T07:59:01",
+    "author": "generated-by-chatgpt"
+  },
+  "codeLists": {
+    "TaxRegimeToPeppolTaxCategory": {
+      "description": "Map target tax regime token to Peppol VAT category code",
+      "entries": [
+        {
+          "source": "TAX.AE0",
+          "target": "AE"
+        }
+      ]
+    },
+    "TaxRegimeToVatExemptionReason": {
+      "description": "Map target tax regime token to Peppol VAT exemption reason code",
+      "entries": [
+        {
+          "source": "TAX.AE0",
+          "target": "VATEX-EU-AE"
+        }
+      ]
+    },
+    "TaxRegimeToPercent": {
+      "description": "Map target tax regime token to VAT percent value",
+      "entries": [
+        {
+          "source": "TAX.AE0",
+          "target": 0
+        }
+      ]
+    },
+    "tempRequirementCodeByTempToken": {
+      "description": "Maps synthetic TEMP.* tokens to a logistics temperature requirement code set used in examples.",
+      "entries": [
+        {
+          "source": "TEMP.Ambient",
+          "target": "AMB"
+        },
+        {
+          "source": "TEMP.Cold",
+          "target": "COLD"
+        }
+      ]
+    }
+  },
+  "rules": [
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_category",
+      "componentId": "TaxCategory_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 100,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
+            "value": {
+              "kind": "lookup",
+              "tableId": "TaxRegimeToPeppolTaxCategory",
+              "input": {
+                "kind": "literal",
+                "value": "TAX.AE0"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:Percent",
+            "value": {
+              "kind": "lookup",
+              "tableId": "TaxRegimeToPercent",
+              "input": {
+                "kind": "literal",
+                "value": "TAX.AE0"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:TaxExemptionReasonCode",
+            "value": {
+              "kind": "lookup",
+              "tableId": "TaxRegimeToVatExemptionReason",
+              "input": {
+                "kind": "literal",
+                "value": "TAX.AE0"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-01"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-10"
+        },
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "rule": "PEPPOL-EN16931-P0107"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "id": "Reverse charge category/value mapping for AE"
+        },
+        {
+          "standard": "VATEX code list",
+          "id": "VATEX-EU-AE only with tax category AE"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_category.test1",
+          "type": "assert",
+          "message": "AE0 target regime requires AE tax category and VATEX-EU-AE reason code"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_category.test2",
+          "type": "assert",
+          "message": "TaxCategory writes must target VAT breakdown TaxCategory fields"
+        }
+      ]
+    },
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_taxable_amount",
+      "componentId": "TaxableAmount_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 90,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount"
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-08"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-DEC-19"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "id": "Reverse-charge VAT breakdown taxable amount"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_taxable_amount.test1",
+          "type": "assert",
+          "message": "For reverse charge, taxable amount is preserved as the VAT base"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_taxable_amount.test2",
+          "type": "assert",
+          "message": "Validate taxable amount against source breakdown or recomputation at runtime"
+        }
+      ]
+    },
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_amount_zero",
+      "componentId": "TaxAmount_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 90,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
+            "value": {
+              "kind": "literal",
+              "value": 0
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-09"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-DEC-20"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "id": "Reverse-charge VAT amount zero"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_amount_zero.test1",
+          "type": "assert",
+          "message": "Reverse-charge VAT amount must be 0"
+        }
+      ]
+    },
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_total_package",
+      "componentId": "TaxTotal_ABIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 80,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cbc:TaxAmount",
+            "value": {
+              "kind": "literal",
+              "value": 0
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxableAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.taxTotals[j].taxSubtotals[k].taxableAmount"
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cbc:TaxAmount",
+            "value": {
+              "kind": "literal",
+              "value": 0
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:ID",
+            "value": {
+              "kind": "lookup",
+              "tableId": "TaxRegimeToPeppolTaxCategory",
+              "input": {
+                "kind": "literal",
+                "value": "TAX.AE0"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:Percent",
+            "value": {
+              "kind": "lookup",
+              "tableId": "TaxRegimeToPercent",
+              "input": {
+                "kind": "literal",
+                "value": "TAX.AE0"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:TaxTotal/cac:TaxSubtotal[j+1]/cac:TaxCategory/cbc:TaxExemptionReasonCode",
+            "value": {
+              "kind": "lookup",
+              "tableId": "TaxRegimeToVatExemptionReason",
+              "input": {
+                "kind": "literal",
+                "value": "TAX.AE0"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-01"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-08"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-09"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-10"
+        },
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "rule": "PEPPOL-EN16931-P0107"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "id": "Reverse-charge tax package at TaxTotal level"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_total_package.test1",
+          "type": "assert",
+          "message": "Exactly one reverse-charge VAT breakdown is emitted"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_total_package.test2",
+          "type": "assert",
+          "message": "Tax total and subtotal tax amounts are zero"
+        }
+      ]
+    },
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_exclusive_total",
+      "componentId": "TaxExclusiveTotal_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 90,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-CO-13"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-DEC-12"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "id": "Legal monetary total without VAT"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_exclusive_total.test1",
+          "type": "assert",
+          "message": "Invoice total amount without VAT remains the net amount"
+        }
+      ]
+    },
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_tax_inclusive_total",
+      "componentId": "TaxInclusiveTotal_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 90,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-CO-15"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-09"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-DEC-14"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "id": "Tax-inclusive amount under reverse charge"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_tax_inclusive_total.test1",
+          "type": "assert",
+          "message": "For reverse charge, total with VAT equals total without VAT because VAT amount is zero"
+        }
+      ]
+    },
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_payable_total",
+      "componentId": "PayableTotal_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 90,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-CO-16"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Prototype assumption",
+          "id": "Current example does not model paid amount or rounding amount; payable derived from net total"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_payable_total.test1",
+          "type": "assert",
+          "message": "Prototype assumption: no paid amount or rounding amount; payable equals tax-exclusive total under reverse charge"
+        }
+      ]
+    },
+    {
+      "ruleId": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package",
+      "componentId": "LegalMonetaryTotal_ABIE",
+      "relevantAxes": [
+        "BP",
+        "TAX"
+      ],
+      "priority": 80,
+      "when": {
+        "source": {
+          "GE": "GE.EU.DE",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.S20"
+        },
+        "target": {
+          "GE": "GE.EU.NL",
+          "BP": "BP.Invoice(380)",
+          "TAX": "TAX.AE0"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxExclusiveAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:TaxInclusiveAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+            }
+          },
+          {
+            "targetPath": "/Invoice/cac:LegalMonetaryTotal/cbc:PayableAmount",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.invoice.legalMonetaryTotal.taxExclusiveTotal"
+            }
+          }
+        ]
+      },
+      "constraints": [
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-CO-13"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-CO-15"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-CO-16"
+        },
+        {
+          "standard": "EN16931 (UBL binding)",
+          "rule": "BR-AE-09"
+        }
+      ],
+      "references": [
+        {
+          "standard": "Peppol BIS Billing 3.0",
+          "id": "Legal monetary total package for reverse charge"
+        }
+      ],
+      "tests": [
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package.test1",
+          "type": "assert",
+          "message": "Legal monetary totals are reconciled for zero-VAT target scenario"
+        },
+        {
+          "id": "TAX_DE_to_NL_reverse_charge_legal_monetary_total_package.test2",
+          "type": "assert",
+          "message": "Applicable only for DE S20 to NL AE0 contextual transform"
+        }
+      ]
+    },
+    {
+      "ruleId": "ORD.Quantity.PT30_to_PT14.copy",
+      "componentId": "Quantity_BBIE",
+      "relevantAxes": [
+        "BP",
+        "CT"
+      ],
+      "priority": 50,
+      "when": {
+        "source": {
+          "BP": "BP.Order(220)",
+          "CT": "CT.PT30"
+        },
+        "target": {
+          "BP": "BP.Order(220)",
+          "CT": "CT.PT14"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Order/cac:OrderLine[i+1]/cbc:Quantity",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.order.lines[i].quantity",
+              "coerce": "number"
+            }
+          }
+        ]
+      },
+      "references": [
+        {
+          "standard": "Peppol Order transaction 3.7 (T01)",
+          "id": "cbc:Quantity (syntax)",
+          "url": "https://docs.peppol.eu/poacc/upgrade-3/syntax/Order/cac-OrderLine/cac-LineItem/cbc-Quantity/"
+        }
+      ],
+      "constraints": [
+        {
+          "standard": "Peppol Order transaction 3.7 (T01)",
+          "rule": "PEPPOL-T01-R004"
+        },
+        {
+          "standard": "Peppol Order transaction 3.7 (T01)",
+          "rule": "PEPPOL-T01-B24101"
+        }
+      ],
+      "notes": "Contextual copy rule used for CT mismatch in the OrderExample."
+    },
+    {
+      "ruleId": "ORD.Quantity.any_to_PT14.copy",
+      "componentId": "Quantity_BBIE",
+      "relevantAxes": [
+        "BP",
+        "CT"
+      ],
+      "priority": 5,
+      "when": {
+        "source": {
+          "BP": "BP.Order(220)"
+        },
+        "target": {
+          "BP": "BP.Order(220)",
+          "CT": "CT.PT14"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Order/cac:OrderLine[i+1]/cbc:Quantity",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.order.lines[i].quantity",
+              "coerce": "number"
+            }
+          }
+        ]
+      },
+      "notes": "Fallback: if target requires CT.PT14, copy quantity."
+    },
+    {
+      "ruleId": "ORD.DeliveryDate.PT30_to_PT14.copy",
+      "componentId": "DeliveryDate_BBIE",
+      "relevantAxes": [
+        "BP",
+        "CT"
+      ],
+      "priority": 50,
+      "when": {
+        "source": {
+          "BP": "BP.Order(220)",
+          "CT": "CT.PT30"
+        },
+        "target": {
+          "BP": "BP.Order(220)",
+          "CT": "CT.PT14"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Order/cac:Delivery/cbc:ActualDeliveryDate",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.order.delivery.deliveryDate",
+              "coerce": "date"
+            }
+          }
+        ]
+      },
+      "references": [
+        {
+          "standard": "Peppol Common rules",
+          "id": "PEPPOL-COMMON-R030",
+          "url": "https://docs.peppol.eu/poacc/upgrade-3/2022-Q4/rules/PEPPOL-COMMON-R030/"
+        }
+      ],
+      "constraints": [
+        {
+          "standard": "Peppol Common rules",
+          "rule": "PEPPOL-COMMON-R030"
+        }
+      ],
+      "notes": "Copy delivery date, enforcing ISO date format expectation."
+    },
+    {
+      "ruleId": "ORD.DeliveryDate.any_to_PT14.copy",
+      "componentId": "DeliveryDate_BBIE",
+      "relevantAxes": [
+        "BP",
+        "CT"
+      ],
+      "priority": 5,
+      "when": {
+        "source": {
+          "BP": "BP.Order(220)"
+        },
+        "target": {
+          "BP": "BP.Order(220)",
+          "CT": "CT.PT14"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/Order/cac:Delivery/cbc:ActualDeliveryDate",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.order.delivery.deliveryDate",
+              "coerce": "date"
+            }
+          }
+        ]
+      },
+      "notes": "Fallback: if target requires CT.PT14, copy delivery date."
+    },
+    {
+      "ruleId": "DESP.TransportEvent.any.copy",
+      "componentId": "TransportEvent_ABIE",
+      "relevantAxes": [
+        "BP",
+        "TEMP"
+      ],
+      "priority": 5,
+      "when": {
+        "source": {
+          "BP": "BP.DespatchAdvice(351)"
+        },
+        "target": {
+          "BP": "BP.DespatchAdvice(351)"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/DespatchAdvice/cac:Shipment/cac:TransportEvent",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.despatchAdvice.shipment.transportEvent"
+            }
+          }
+        ]
+      },
+      "references": [
+        {
+          "standard": "Peppol Logistics",
+          "id": "TransportExecutionPlan (temperature constraints)",
+          "url": "https://docs.peppol.eu/logistics/syntax/TransportExecutionPlan/tree/"
+        }
+      ],
+      "notes": "Copies transport event structure; temperature requirement may be overwritten at BBIE level."
+    },
+    {
+      "ruleId": "DESP.Shipment_to_TransportEvent.any.copy",
+      "componentId": "Shipment_to_TransportEvent_ASBIE",
+      "relevantAxes": [
+        "BP",
+        "TEMP"
+      ],
+      "priority": 5,
+      "when": {
+        "source": {
+          "BP": "BP.DespatchAdvice(351)"
+        },
+        "target": {
+          "BP": "BP.DespatchAdvice(351)"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/DespatchAdvice/cac:Shipment/cac:TransportEvent",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.despatchAdvice.shipment.transportEvent"
+            }
+          }
+        ]
+      },
+      "notes": "Association-level copy to ensure TransportEvent exists in target structure."
+    },
+    {
+      "ruleId": "DESP.EstimatedArrivalDate.any.copy",
+      "componentId": "EstimatedArrivalDate_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TEMP"
+      ],
+      "priority": 10,
+      "when": {
+        "source": {
+          "BP": "BP.DespatchAdvice(351)"
+        },
+        "target": {
+          "BP": "BP.DespatchAdvice(351)"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/DespatchAdvice/cac:Shipment/cac:TransportEvent/cbc:EstimatedArrivalDate",
+            "value": {
+              "kind": "source_value",
+              "sourcePath": "$.despatchAdvice.shipment.transportEvent.estimatedArrivalDate",
+              "coerce": "date"
+            }
+          }
+        ]
+      },
+      "references": [
+        {
+          "standard": "Peppol Common rules",
+          "id": "PEPPOL-COMMON-R030",
+          "url": "https://docs.peppol.eu/poacc/upgrade-3/2022-Q4/rules/PEPPOL-COMMON-R030/"
+        }
+      ],
+      "constraints": [
+        {
+          "standard": "Peppol Common rules",
+          "rule": "PEPPOL-COMMON-R030"
+        }
+      ],
+      "notes": "Copy ETA date from source to target."
+    },
+    {
+      "ruleId": "DESP.TemperatureRequirement.Ambient_to_Cold.set_COLD",
+      "componentId": "TemperatureRequirement_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TEMP"
+      ],
+      "priority": 50,
+      "when": {
+        "source": {
+          "BP": "BP.DespatchAdvice(351)",
+          "TEMP": "TEMP.Ambient"
+        },
+        "target": {
+          "BP": "BP.DespatchAdvice(351)",
+          "TEMP": "TEMP.Cold"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/DespatchAdvice/cac:Shipment/cac:TransportEvent/cbc:TemperatureRequirementCode",
+            "value": {
+              "kind": "lookup",
+              "tableId": "tempRequirementCodeByTempToken",
+              "input": {
+                "kind": "literal",
+                "value": "TEMP.Cold"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          }
+        ]
+      },
+      "references": [
+        {
+          "standard": "Peppol Logistics",
+          "id": "TransportExecutionPlan (minimum/maximum temperature)",
+          "url": "https://docs.peppol.eu/logistics/syntax/TransportExecutionPlan/tree/"
+        }
+      ],
+      "notes": "Cold-chain target: set temperature requirement code to COLD."
+    },
+    {
+      "ruleId": "DESP.TemperatureRequirement.Cold_to_Ambient.set_AMB",
+      "componentId": "TemperatureRequirement_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TEMP"
+      ],
+      "priority": 50,
+      "when": {
+        "source": {
+          "BP": "BP.DespatchAdvice(351)",
+          "TEMP": "TEMP.Cold"
+        },
+        "target": {
+          "BP": "BP.DespatchAdvice(351)",
+          "TEMP": "TEMP.Ambient"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/DespatchAdvice/cac:Shipment/cac:TransportEvent/cbc:TemperatureRequirementCode",
+            "value": {
+              "kind": "lookup",
+              "tableId": "tempRequirementCodeByTempToken",
+              "input": {
+                "kind": "literal",
+                "value": "TEMP.Ambient"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          }
+        ]
+      },
+      "notes": "Ambient target: set temperature requirement code to AMB."
+    },
+    {
+      "ruleId": "DESP.TemperatureRequirement.any_to_Cold.set_COLD",
+      "componentId": "TemperatureRequirement_BBIE",
+      "relevantAxes": [
+        "BP",
+        "TEMP"
+      ],
+      "priority": 5,
+      "when": {
+        "source": {
+          "BP": "BP.DespatchAdvice(351)"
+        },
+        "target": {
+          "BP": "BP.DespatchAdvice(351)",
+          "TEMP": "TEMP.Cold"
+        }
+      },
+      "then": {
+        "writes": [
+          {
+            "targetPath": "/DespatchAdvice/cac:Shipment/cac:TransportEvent/cbc:TemperatureRequirementCode",
+            "value": {
+              "kind": "lookup",
+              "tableId": "tempRequirementCodeByTempToken",
+              "input": {
+                "kind": "literal",
+                "value": "TEMP.Cold"
+              },
+              "onMissing": {
+                "action": "error"
+              }
+            }
+          }
+        ]
+      },
+      "notes": "Fallback: if target is cold-chain, enforce COLD requirement code."
+    }
+  ]
+}

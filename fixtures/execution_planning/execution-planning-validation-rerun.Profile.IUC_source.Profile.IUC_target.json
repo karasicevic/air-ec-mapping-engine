@@ -1,0 +1,12 @@
+{
+  "checks": {
+    "allContextualComponentsHaveRules": true,
+    "contextualOnly": true,
+    "deterministicTieBreakStable": true,
+    "noConflictingWrites": true,
+    "singleWinnerPerComponent": true
+  },
+  "sourceProfileId": "Profile.IUC_source",
+  "targetProfileId": "Profile.IUC_target",
+  "version": "ExecutionPlanningValidation-1.1"
+}
