@@ -8,6 +8,7 @@ from typing import Any
 
 import typer
 
+from .execution_planning_orchestrator import run_execution_planning
 from .mapping_orchestrator import run_mapping_pipeline
 from .orchestrator import run_ec_pair_pipeline, run_ec_pipeline
 
@@ -218,6 +219,8 @@ def run_all_pair(
     source_iucs: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to source IUCs JSON array"),
     target_iucs: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to target IUCs JSON array"),
     mapping_config: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to mapping config JSON"),
+    transform_table: Path | None = typer.Option(None, exists=True, file_okay=True, dir_okay=False, help="Optional TransformTable-1.0 JSON to run Execution Planning"),
+    runtime_context: Path | None = typer.Option(None, exists=True, file_okay=True, dir_okay=False, help="Optional runtimeContext JSON to run Execution Planning"),
     output_dir: Path = typer.Option(..., file_okay=False, dir_okay=True, help="Output directory for EC + mapping artifacts"),
 ) -> None:
     """Run EC for source/target bundles, then mapping, writing all artifacts."""
@@ -262,8 +265,85 @@ def run_all_pair(
     for filename, payload in mapping_result["artifacts"].items():
         _dump_json(output_dir / filename, payload)
 
-    total = len(ec_pair["source"]["artifacts"]) + len(ec_pair["target"]["artifacts"]) + len(mapping_result["artifacts"])
+    if (transform_table is None) ^ (runtime_context is None):
+        typer.echo(json.dumps({"error": "Validation", "reason": "execution-planning-inputs-incomplete", "details": {}}, separators=(",", ":")))
+        raise typer.Exit(code=2)
+
+    execution_planning_count = 0
+    if transform_table is not None and runtime_context is not None:
+        try:
+            table = _load_json(transform_table)
+            runtime = _load_json(runtime_context)
+        except Exception as exc:  # pragma: no cover
+            typer.echo(json.dumps({"error": "Validation", "reason": f"execution-planning-input-parse-error: {exc}", "details": {}}, separators=(",", ":")))
+            raise typer.Exit(code=2) from exc
+
+        mra_name = next((name for name in mapping_result["artifacts"] if name.startswith("mapping.mra.")), None)
+        if not mra_name:
+            typer.echo(json.dumps({"error": "Validation", "reason": "missing_mapping_mra", "details": {}}, separators=(",", ":")))
+            raise typer.Exit(code=2)
+
+        execution_planning_result = run_execution_planning(
+            mapping_result["artifacts"][mra_name],
+            src,
+            tgt,
+            table,
+            runtime,
+            mapping_mra_filename=mra_name,
+        )
+        if _is_envelope(execution_planning_result):
+            typer.echo(json.dumps(execution_planning_result, sort_keys=True, separators=(",", ":"), ensure_ascii=True))
+            raise typer.Exit(code=2)
+
+        _dump_json(output_dir / execution_planning_result["execution_name"], execution_planning_result["execution"])
+        _dump_json(output_dir / execution_planning_result["validation_name"], execution_planning_result["validation"])
+        execution_planning_count = 2
+
+    total = (
+        len(ec_pair["source"]["artifacts"])
+        + len(ec_pair["target"]["artifacts"])
+        + len(mapping_result["artifacts"])
+        + execution_planning_count
+    )
     typer.echo(f"Wrote {total} artifacts to {output_dir}")
+
+
+@app.command("run-execution-planning")
+def run_execution_planning_cli(
+    mapping_mra: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to mapping.mra.<S>.<T>.json"),
+    source_bundle: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to source bundle JSON"),
+    target_bundle: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to target bundle JSON"),
+    transform_table: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to TransformTable-1.0 JSON"),
+    runtime_context: Path = typer.Option(..., exists=True, file_okay=True, dir_okay=False, help="Path to runtimeContext JSON"),
+    output_dir: Path = typer.Option(..., file_okay=False, dir_okay=True, help="Output directory for execution planning artifacts"),
+) -> None:
+    """Run Execution Planning contextual-only planning."""
+    try:
+        mras = _load_json(mapping_mra)
+        source = _load_json(source_bundle)
+        target = _load_json(target_bundle)
+        table = _load_json(transform_table)
+        runtime = _load_json(runtime_context)
+    except Exception as exc:  # pragma: no cover
+        typer.echo(json.dumps({"error": "Validation", "reason": f"input-parse-error: {exc}", "details": {}}, separators=(",", ":")))
+        raise typer.Exit(code=2) from exc
+
+    result = run_execution_planning(
+        mras,
+        source,
+        target,
+        table,
+        runtime,
+        mapping_mra_filename=mapping_mra.name,
+    )
+    if _is_envelope(result):
+        typer.echo(json.dumps(result, sort_keys=True, separators=(",", ":"), ensure_ascii=True))
+        raise typer.Exit(code=2)
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    _dump_json(output_dir / result["execution_name"], result["execution"])
+    _dump_json(output_dir / result["validation_name"], result["validation"])
+    typer.echo(f"Wrote 2 artifacts to {output_dir}")
 
 
 def main() -> None:

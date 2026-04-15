@@ -17,7 +17,10 @@ def _ensure(condition: bool, message: str) -> None:
 
 def build_error_envelope(error: str, reason: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
     """Build a Mission-EC §7-compliant error envelope."""
-    _ensure(error in {"Validation", "Step1", "Step2", "Step3", "Step4"}, "error type is not allowed")
+    _ensure(
+        error in {"Validation", "Step1", "Step2", "Step3", "Step4", "ExecutionPlanning"},
+        "error type is not allowed",
+    )
     _ensure(isinstance(reason, str) and reason != "", "reason must be non-empty string")
     payload: dict[str, Any] = {
         "error": error,
