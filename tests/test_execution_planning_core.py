@@ -9,6 +9,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+EXECUTION_PLANNING_FIXTURES = ROOT / "tests" / "fixtures" / "execution_planning"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
@@ -36,16 +37,11 @@ def _taxonomy_from_runtime(runtime: dict) -> dict:
 
 def _execution_planning_inputs() -> tuple[list[dict], dict, dict]:
     mras = _load_json(
-        ROOT / "fixtures" / "execution_planning" / "mapping.mra.Profile.IUC_source.Profile.IUC_target.json"
+        EXECUTION_PLANNING_FIXTURES / "mapping.mra.Profile.IUC_source.Profile.IUC_target.json"
     )
-    table = _load_json(
-        ROOT / "fixtures" / "execution_planning" / "transformationTable.expanded.DE_to_NL_AE0.json"
-    )
+    table = _load_json(EXECUTION_PLANNING_FIXTURES / "transformationTable.json")
     runtime = _load_json(
-        ROOT
-        / "fixtures"
-        / "execution_planning"
-        / "runtimeContext.Profile.IUC_source.Profile.IUC_target.json"
+        EXECUTION_PLANNING_FIXTURES / "runtimeContext.Profile.IUC_source.Profile.IUC_target.json"
     )
     return mras, table, runtime
 

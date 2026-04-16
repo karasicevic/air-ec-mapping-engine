@@ -8,6 +8,7 @@ from typer.testing import CliRunner
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+EXECUTION_PLANNING_FIXTURES = ROOT / "tests" / "fixtures" / "execution_planning"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
@@ -31,7 +32,7 @@ def _taxonomy_from_runtime(runtime: dict) -> dict:
 
 
 def test_execution_planning_cli_happy_path_writes_outputs(tmp_path: Path) -> None:
-    runtime_path = ROOT / "fixtures" / "execution_planning" / "runtimeContext.Profile.IUC_source.Profile.IUC_target.json"
+    runtime_path = EXECUTION_PLANNING_FIXTURES / "runtimeContext.Profile.IUC_source.Profile.IUC_target.json"
     runtime = _load_json(runtime_path)
     taxonomy = _taxonomy_from_runtime(runtime)
 
@@ -43,8 +44,8 @@ def test_execution_planning_cli_happy_path_writes_outputs(tmp_path: Path) -> Non
     source_path.write_text(json.dumps(source_bundle), encoding="utf-8")
     target_path.write_text(json.dumps(target_bundle), encoding="utf-8")
 
-    mra_path = ROOT / "fixtures" / "execution_planning" / "mapping.mra.Profile.IUC_source.Profile.IUC_target.json"
-    table_path = ROOT / "fixtures" / "execution_planning" / "transformationTable.expanded.DE_to_NL_AE0.json"
+    mra_path = EXECUTION_PLANNING_FIXTURES / "mapping.mra.Profile.IUC_source.Profile.IUC_target.json"
+    table_path = EXECUTION_PLANNING_FIXTURES / "transformationTable.json"
     out_dir = tmp_path / "out"
 
     result = runner.invoke(
@@ -275,8 +276,8 @@ def test_run_all_pair_writes_execution_planning_outputs_when_flags_present(tmp_p
     target_iucs_path.write_text(json.dumps(_iucs_target()), encoding="utf-8")
     cfg_path.write_text(json.dumps(_mapping_config()), encoding="utf-8")
 
-    runtime_path = ROOT / "fixtures" / "execution_planning" / "runtimeContext.Profile.IUC_source.Profile.IUC_target.json"
-    table_path = ROOT / "fixtures" / "execution_planning" / "transformationTable.expanded.DE_to_NL_AE0.json"
+    runtime_path = EXECUTION_PLANNING_FIXTURES / "runtimeContext.Profile.IUC_source.Profile.IUC_target.json"
+    table_path = EXECUTION_PLANNING_FIXTURES / "transformationTable.json"
 
     result = runner.invoke(
         app,
