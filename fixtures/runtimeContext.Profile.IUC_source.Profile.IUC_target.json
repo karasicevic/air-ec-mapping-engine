@@ -1,16 +1,14 @@
 {
   "source": {
+    "BP": "BP.DespatchAdvice(351)",
+    "CHN": "CHN.EDI",
     "GE": "GE.EU.DE",
-    "IND": "IND.Manufacturing",
-    "BP": "BP.Invoice(380)",
-    "TAX": "TAX.S20",
-    "CT": "CT.PT30"
+    "TEMP": "TEMP.Ambient"
   },
   "target": {
+    "BP": "BP.DespatchAdvice(351)",
+    "CHN": "CHN.API",
     "GE": "GE.EU.NL",
-    "IND": "IND.Services",
-    "BP": "BP.Invoice(380)",
-    "TAX": "TAX.AE0",
-    "CT": "CT.PT30"
+    "TEMP": "TEMP.Cold"
   }
 }
